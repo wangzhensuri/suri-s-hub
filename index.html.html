@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>智能客服数据分析报告｜2026-05-14</title>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #172033;
+  --muted: #667085;
+  --line: #dde3ea;
+  --blue: #2563eb;
+  --teal: #0f9f8f;
+  --amber: #c77800;
+  --red: #d03b3b;
+  --green: #168a45;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.55;
+}
+.page { max-width: 1180px; margin: 0 auto; padding: 32px 24px 56px; }
+.hero {
+  padding: 28px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+.eyebrow { color: var(--blue); font-weight: 700; font-size: 14px; }
+h1 { margin: 8px 0 10px; font-size: 34px; line-height: 1.18; letter-spacing: 0; }
+.subtitle { color: var(--muted); font-size: 16px; max-width: 820px; }
+.grid { display: grid; gap: 16px; }
+.metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 24px 0; }
+.metric, .panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+.metric { padding: 18px; min-height: 126px; }
+.metric-label { color: var(--muted); font-size: 13px; }
+.metric-value { font-size: 30px; line-height: 1.2; font-weight: 760; margin: 8px 0; }
+.metric-note { color: var(--muted); font-size: 13px; }
+.panel { padding: 20px; overflow: hidden; }
+.two { grid-template-columns: 1.1fr .9fr; }
+.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+h2 { font-size: 21px; margin: 0 0 14px; }
+h3 { font-size: 16px; margin: 0 0 12px; }
+.section { margin-top: 20px; }
+.insights { padding-left: 20px; margin: 0; }
+.insights li { margin: 8px 0; }
+.bar-list { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 150px 1fr 112px; gap: 12px; align-items: center; }
+.bar-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
+.bar-track { height: 12px; background: #edf1f5; border-radius: 999px; overflow: hidden; }
+.bar-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--teal)); border-radius: inherit; }
+.bar-value { color: var(--muted); font-size: 13px; text-align: right; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid var(--line); padding: 9px 8px; text-align: left; vertical-align: top; }
+th { color: #344054; background: #f8fafc; font-weight: 700; }
+tbody tr:hover { background: #f8fbff; }
+.tagline { color: var(--muted); margin-top: -8px; margin-bottom: 14px; font-size: 13px; }
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pill { border: 1px solid var(--line); background: #f8fafc; color: #344054; padding: 6px 10px; border-radius: 999px; font-size: 13px; }
+.footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+.warning { color: var(--amber); font-weight: 700; }
+.bad { color: var(--red); font-weight: 700; }
+.good { color: var(--green); font-weight: 700; }
+@media (max-width: 920px) {
+  .metrics, .two, .three { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 112px 1fr 90px; }
+  h1 { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <div class="eyebrow">智能客服运营分析</div>
+    <h1>2026-05-14 客服日志数据分析报告</h1>
+    <div class="subtitle">数据来源：5.14-5.15.xlsx；统计区间：2026-05-14 00:00:18 至 2026-05-14 23:59:04。本报告聚焦问答量、转人工、拒识、知识命中、响应效率与高频诉求。</div>
+  </header>
+
+  <section class="grid metrics">
+    
+    <section class="metric">
+      <div class="metric-label">问答总量</div>
+      <div class="metric-value">20,073</div>
+      <div class="metric-note">4,962 个会话，3,264 个用户</div>
+    </section>
+    
+    
+    <section class="metric">
+      <div class="metric-label">转人工率</div>
+      <div class="metric-value">62.4%</div>
+      <div class="metric-note">12,524 条触发转人工</div>
+    </section>
+    
+    
+    <section class="metric">
+      <div class="metric-label">拒识率</div>
+      <div class="metric-value">6.2%</div>
+      <div class="metric-note">1,253 条未识别/间接回答</div>
+    </section>
+    
+    
+    <section class="metric">
+      <div class="metric-label">响应时间 P95</div>
+      <div class="metric-value">2,057ms</div>
+      <div class="metric-note">平均 685ms，中位 284ms</div>
+    </section>
+    
+    
+    <section class="metric">
+      <div class="metric-label">直接回答率</div>
+      <div class="metric-value">93.8%</div>
+      <div class="metric-note">18,820 条直接回答</div>
+    </section>
+    
+    
+    <section class="metric">
+      <div class="metric-label">会话深度</div>
+      <div class="metric-value">4.0</div>
+      <div class="metric-note">每会话平均轮次，中位 3 轮</div>
+    </section>
+    
+    
+    <section class="metric">
+      <div class="metric-label">寒暄占比</div>
+      <div class="metric-value">5.1%</div>
+      <div class="metric-note">1,018 条寒暄类请求</div>
+    </section>
+    
+    
+    <section class="metric">
+      <div class="metric-label">敏感请求</div>
+      <div class="metric-value">77</div>
+      <div class="metric-note">占全部请求 0.4%</div>
+    </section>
+    
+  </section>
+
+  <section class="grid two section">
+    <div class="panel">
+      <h2>核心发现</h2>
+      <ol class="insights">
+        <li>转人工率为 62.4%，其中标准问句“转人工任务型”命中 11,130 次，是当前最大流量入口，建议单独拆解转人工前置原因。</li><li>拒识率为 6.2%，拒识问句以数字、短语和泛化诉求为主，适合补充菜单澄清、意图改写和兜底追问。</li><li>高峰集中在 09:00-11:59 与 14:00-16:59，16 点单小时达到 2,303 条，排班和人工承接能力应覆盖这个窗口。</li><li>响应时间中位数 284ms，95 分位 2,057ms；整体速度可接受，但 2s 以上请求仍有 1,183 条。</li><li>知识命中集中在入驻、商品上架、账号密码、协议录入、网超迁移等主题，适合优先做知识库精修和入口卡片化。</li>
+      </ol>
+      <div class="pill-row">
+        <span class="pill">转人工治理</span>
+        <span class="pill">拒识问句补库</span>
+        <span class="pill">高峰排班</span>
+        <span class="pill">知识点精修</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>小时级流量</h2>
+      <div class="tagline">仅展示有请求的小时；条形越长表示请求量越高。</div>
+      <div class='bar-list'>
+            <div class="bar-row">
+              <div class="bar-label" title="00:00">00:00</div>
+              <div class="bar-track"><span style="width:0.04%"></span></div>
+              <div class="bar-value">1</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="01:00">01:00</div>
+              <div class="bar-track"><span style="width:0.23%"></span></div>
+              <div class="bar-value">6</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="05:00">05:00</div>
+              <div class="bar-track"><span style="width:0.11%"></span></div>
+              <div class="bar-value">3</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="07:00">07:00</div>
+              <div class="bar-track"><span style="width:1.02%"></span></div>
+              <div class="bar-value">27</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="08:00">08:00</div>
+              <div class="bar-track"><span style="width:32.44%"></span></div>
+              <div class="bar-value">863</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="09:00">09:00</div>
+              <div class="bar-track"><span style="width:100.00%"></span></div>
+              <div class="bar-value">2,660</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="10:00">10:00</div>
+              <div class="bar-track"><span style="width:96.62%"></span></div>
+              <div class="bar-value">2,570</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="11:00">11:00</div>
+              <div class="bar-track"><span style="width:91.32%"></span></div>
+              <div class="bar-value">2,429</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="12:00">12:00</div>
+              <div class="bar-track"><span style="width:41.77%"></span></div>
+              <div class="bar-value">1,111</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="13:00">13:00</div>
+              <div class="bar-track"><span style="width:45.83%"></span></div>
+              <div class="bar-value">1,219</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="14:00">14:00</div>
+              <div class="bar-track"><span style="width:71.43%"></span></div>
+              <div class="bar-value">1,900</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="15:00">15:00</div>
+              <div class="bar-track"><span style="width:85.45%"></span></div>
+              <div class="bar-value">2,273</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="16:00">16:00</div>
+              <div class="bar-track"><span style="width:86.58%"></span></div>
+              <div class="bar-value">2,303</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="17:00">17:00</div>
+              <div class="bar-track"><span style="width:55.90%"></span></div>
+              <div class="bar-value">1,487</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="18:00">18:00</div>
+              <div class="bar-track"><span style="width:21.54%"></span></div>
+              <div class="bar-value">573</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="19:00">19:00</div>
+              <div class="bar-track"><span style="width:15.60%"></span></div>
+              <div class="bar-value">415</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="20:00">20:00</div>
+              <div class="bar-track"><span style="width:3.46%"></span></div>
+              <div class="bar-value">92</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="21:00">21:00</div>
+              <div class="bar-track"><span style="width:2.97%"></span></div>
+              <div class="bar-value">79</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="22:00">22:00</div>
+              <div class="bar-track"><span style="width:0.34%"></span></div>
+              <div class="bar-value">9</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="23:00">23:00</div>
+              <div class="bar-track"><span style="width:1.99%"></span></div>
+              <div class="bar-value">53</div>
+            </div>
+            </div>
+    </div>
+  </section>
+
+  <section class="grid three section">
+    <div class="panel">
+      <h2>回答方式</h2>
+      <div class='bar-list'>
+            <div class="bar-row">
+              <div class="bar-label" title="直接回答">直接回答</div>
+              <div class="bar-track"><span style="width:100.00%"></span></div>
+              <div class="bar-value">18,820 / 93.8%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="间接回答">间接回答</div>
+              <div class="bar-track"><span style="width:6.66%"></span></div>
+              <div class="bar-value">1,253 / 6.2%</div>
+            </div>
+            </div>
+    </div>
+    <div class="panel">
+      <h2>知识库类型</h2>
+      <div class='bar-list'>
+            <div class="bar-row">
+              <div class="bar-label" title="任务型">任务型</div>
+              <div class="bar-track"><span style="width:100.00%"></span></div>
+              <div class="bar-value">15,317 / 76.3%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="FAQ">FAQ</div>
+              <div class="bar-track"><span style="width:24.40%"></span></div>
+              <div class="bar-value">3,738 / 18.6%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="寒暄">寒暄</div>
+              <div class="bar-track"><span style="width:6.65%"></span></div>
+              <div class="bar-value">1,018 / 5.1%</div>
+            </div>
+            </div>
+    </div>
+    <div class="panel">
+      <h2>响应时间分布</h2>
+      <div class='bar-list'>
+            <div class="bar-row">
+              <div class="bar-label" title="300ms内">300ms内</div>
+              <div class="bar-track"><span style="width:100.00%"></span></div>
+              <div class="bar-value">11,016 / 54.9%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="300ms-1s">300ms-1s</div>
+              <div class="bar-track"><span style="width:31.72%"></span></div>
+              <div class="bar-value">3,494 / 17.4%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="1s-2s">1s-2s</div>
+              <div class="bar-track"><span style="width:39.76%"></span></div>
+              <div class="bar-value">4,380 / 21.8%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="2s以上">2s以上</div>
+              <div class="bar-track"><span style="width:10.74%"></span></div>
+              <div class="bar-value">1,183 / 5.9%</div>
+            </div>
+            </div>
+    </div>
+  </section>
+
+  <section class="grid two section">
+    <div class="panel">
+      <h2>业务类型分布</h2>
+      <div class='bar-list'>
+            <div class="bar-row">
+              <div class="bar-label" title="任务型">任务型</div>
+              <div class="bar-track"><span style="width:100.00%"></span></div>
+              <div class="bar-value">15,317 / 76.3%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="普通知识点">普通知识点</div>
+              <div class="bar-track"><span style="width:24.40%"></span></div>
+              <div class="bar-value">3,738 / 18.6%</div>
+            </div>
+            
+            <div class="bar-row">
+              <div class="bar-label" title="寒暄">寒暄</div>
+              <div class="bar-track"><span style="width:6.65%"></span></div>
+              <div class="bar-value">1,018 / 5.1%</div>
+            </div>
+            </div>
+    </div>
+    <div class="panel">
+      <h2>高流量小时转人工情况</h2>
+      <table><thead><tr><th>小时</th><th>总量</th><th>转人工</th><th>转人工率</th></tr></thead><tbody><tr><td>9</td><td>2660</td><td>1631</td><td>61.3%</td></tr><tr><td>10</td><td>2570</td><td>1729</td><td>67.3%</td></tr><tr><td>11</td><td>2429</td><td>1493</td><td>61.5%</td></tr><tr><td>16</td><td>2303</td><td>1422</td><td>61.7%</td></tr><tr><td>15</td><td>2273</td><td>1478</td><td>65.0%</td></tr><tr><td>14</td><td>1900</td><td>1233</td><td>64.9%</td></tr><tr><td>17</td><td>1487</td><td>979</td><td>65.8%</td></tr><tr><td>13</td><td>1219</td><td>821</td><td>67.4%</td></tr><tr><td>12</td><td>1111</td><td>651</td><td>58.6%</td></tr><tr><td>8</td><td>863</td><td>524</td><td>60.7%</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <section class="grid two section">
+    <div class="panel">
+      <h2>TOP 知识点分类</h2>
+      <table><thead><tr><th>知识点分类</th><th>命中次数</th><th>占比</th></tr></thead><tbody><tr><td>全部/转人工二轮</td><td>11130</td><td>55.4%</td></tr><tr><td>全部/入驻</td><td>1638</td><td>8.2%</td></tr><tr><td>全部/通用</td><td>670</td><td>3.3%</td></tr><tr><td>全部/乐采云</td><td>580</td><td>2.9%</td></tr><tr><td>全部/全部</td><td>464</td><td>2.3%</td></tr><tr><td>全部/协议与商品</td><td>464</td><td>2.3%</td></tr><tr><td>全部/其他/指令</td><td>287</td><td>1.4%</td></tr><tr><td>全部/ivr</td><td>239</td><td>1.2%</td></tr><tr><td>全部/全部/核心通用对话/评价</td><td>180</td><td>0.9%</td></tr><tr><td>全部/其他模块/乐采云</td><td>179</td><td>0.9%</td></tr><tr><td>全部/全部/社会义务对话/告别</td><td>167</td><td>0.8%</td></tr><tr><td>全部/通用模块/平台规则及操作/通用操作</td><td>158</td><td>0.8%</td></tr></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>TOP 标准问句</h2>
+      <table><thead><tr><th>标准问句</th><th>命中次数</th><th>占比</th></tr></thead><tbody><tr><td>[259027] 转人工任务型</td><td>11130</td><td>55.4%</td></tr><tr><td>[-] </td><td>1253</td><td>6.2%</td></tr><tr><td>[909] 如何注册入驻</td><td>620</td><td>3.1%</td></tr><tr><td>[1715] 如何上架商品</td><td>422</td><td>2.1%</td></tr><tr><td>[259028] 好的</td><td>404</td><td>2.0%</td></tr><tr><td>[902] 忘记账号密码</td><td>369</td><td>1.8%</td></tr><tr><td>[890] 重听</td><td>286</td><td>1.4%</td></tr><tr><td>[2433] 如何录入协议</td><td>207</td><td>1.0%</td></tr><tr><td>[260077] 按键调整</td><td>174</td><td>0.9%</td></tr><tr><td>[258837] 再见</td><td>167</td><td>0.8%</td></tr><tr><td>[1714] 注册审核</td><td>157</td><td>0.8%</td></tr><tr><td>[260305] 网超迁移</td><td>149</td><td>0.7%</td></tr><tr><td>[3] CA问题合集</td><td>122</td><td>0.6%</td></tr><tr><td>[906] 如何修改注册资料</td><td>114</td><td>0.6%</td></tr><tr><td>[258863] 回答不准确</td><td>104</td><td>0.5%</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <section class="grid two section">
+    <div class="panel">
+      <h2>用户原始问句 TOP20</h2>
+      <div class="tagline">用于识别用户真实表达、入口词和菜单按键行为。</div>
+      <table><thead><tr><th>用户问句</th><th>出现次数</th><th>占比</th></tr></thead><tbody><tr><td>转人工</td><td>2285</td><td>11.4%</td></tr><tr><td>6</td><td>1869</td><td>9.3%</td></tr><tr><td>人工服务</td><td>1410</td><td>7.0%</td></tr><tr><td>人工客服</td><td>726</td><td>3.6%</td></tr><tr><td>2</td><td>565</td><td>2.8%</td></tr><tr><td>1</td><td>498</td><td>2.5%</td></tr><tr><td>转人工服务</td><td>405</td><td>2.0%</td></tr><tr><td>人工</td><td>324</td><td>1.6%</td></tr><tr><td>转人工客服</td><td>222</td><td>1.1%</td></tr><tr><td>9</td><td>219</td><td>1.1%</td></tr><tr><td>3</td><td>192</td><td>1.0%</td></tr><tr><td>呃转人工</td><td>182</td><td>0.9%</td></tr><tr><td>人工服务啊</td><td>162</td><td>0.8%</td></tr><tr><td>按键导航</td><td>121</td><td>0.6%</td></tr><tr><td>供应商</td><td>111</td><td>0.6%</td></tr><tr><td>呃人工服务</td><td>106</td><td>0.5%</td></tr><tr><td>转人工啊</td><td>100</td><td>0.5%</td></tr><tr><td>4</td><td>93</td><td>0.5%</td></tr><tr><td>5</td><td>92</td><td>0.5%</td></tr><tr><td>网上超市</td><td>86</td><td>0.4%</td></tr></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>转人工问句 TOP15</h2>
+      <div class="tagline">建议重点拆解这些入口背后的真实问题类型。</div>
+      <table><thead><tr><th>转人工问句</th><th>转人工次数</th><th>占转人工比</th></tr></thead><tbody><tr><td>6</td><td>1842</td><td>14.7%</td></tr><tr><td>转人工</td><td>1825</td><td>14.6%</td></tr><tr><td>人工服务</td><td>1138</td><td>9.1%</td></tr><tr><td>人工客服</td><td>592</td><td>4.7%</td></tr><tr><td>2</td><td>385</td><td>3.1%</td></tr><tr><td>1</td><td>370</td><td>3.0%</td></tr><tr><td>转人工服务</td><td>327</td><td>2.6%</td></tr><tr><td>人工</td><td>263</td><td>2.1%</td></tr><tr><td>转人工客服</td><td>183</td><td>1.5%</td></tr><tr><td>9</td><td>147</td><td>1.2%</td></tr><tr><td>呃转人工</td><td>140</td><td>1.1%</td></tr><tr><td>人工服务啊</td><td>137</td><td>1.1%</td></tr><tr><td>3</td><td>131</td><td>1.0%</td></tr><tr><td>呃人工服务</td><td>88</td><td>0.7%</td></tr><tr><td>转人工啊</td><td>76</td><td>0.6%</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <section class="grid two section">
+    <div class="panel">
+      <h2>拒识问句 TOP15</h2>
+      <div class="tagline">适合补充意图识别、菜单澄清和兜底追问。</div>
+      <table><thead><tr><th>拒识问句</th><th>拒识次数</th><th>占拒识比</th></tr></thead><tbody><tr><td>那个</td><td>9</td><td>0.7%</td></tr><tr><td>这个</td><td>7</td><td>0.6%</td></tr><tr><td>呃呃</td><td>7</td><td>0.6%</td></tr><tr><td>今天</td><td>5</td><td>0.4%</td></tr><tr><td>然后</td><td>5</td><td>0.4%</td></tr><tr><td>就是</td><td>4</td><td>0.3%</td></tr><tr><td>哎呀</td><td>4</td><td>0.3%</td></tr><tr><td>转人</td><td>3</td><td>0.2%</td></tr><tr><td>新疆</td><td>3</td><td>0.2%</td></tr><tr><td>先生</td><td>3</td><td>0.2%</td></tr><tr><td>呃协议签订</td><td>3</td><td>0.2%</td></tr><tr><td>稍等</td><td>3</td><td>0.2%</td></tr><tr><td>没事没事嗯</td><td>3</td><td>0.2%</td></tr><tr><td>呃没有了</td><td>3</td><td>0.2%</td></tr><tr><td>人工务</td><td>3</td><td>0.2%</td></tr></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>运营建议</h2>
+      <table>
+        <thead><tr><th>优先级</th><th>建议动作</th><th>预期收益</th></tr></thead>
+        <tbody>
+          <tr><td><span class="bad">高</span></td><td>拆解“转人工任务型”链路，标注转人工前最后一轮用户意图，区分必须人工与可机器人承接场景。</td><td>降低无效转人工，释放人工座席压力。</td></tr>
+          <tr><td><span class="bad">高</span></td><td>围绕入驻、上架商品、账号密码、协议录入、保证金等高频知识点做答案精修和同义问扩展。</td><td>提升直接回答率和一次解决率。</td></tr>
+          <tr><td><span class="warning">中</span></td><td>对数字按键、短语式输入、泛化“人工/供应商/网上超市”等问句增加澄清卡片或菜单式追问。</td><td>减少拒识与错误路由。</td></tr>
+          <tr><td><span class="warning">中</span></td><td>09:00-11:59、14:00-16:59 做高峰容量保障，尤其关注 15-16 点。</td><td>提升高峰承接稳定性。</td></tr>
+          <tr><td><span class="good">持续</span></td><td>建立每日监控：转人工率、拒识率、P95 响应时间、TOP 失败问句、TOP 新增问句。</td><td>让知识库优化形成闭环。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="footer">报告由本地数据生成，未使用外部网络资源。用户评价与原因记录字段为空，暂未纳入满意度分析。</div>
+</main>
+</body>
+</html>
