@@ -3,19 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>智能客服数据分析报告｜2026-05-14</title>
+<title>智能客服会话运营平台</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root {
-  --bg: #f6f7f9;
+  --bg: #f5f7fb;
   --panel: #ffffff;
-  --ink: #172033;
+  --ink: #182033;
   --muted: #667085;
-  --line: #dde3ea;
+  --line: #dfe6ee;
   --blue: #2563eb;
-  --teal: #0f9f8f;
-  --amber: #c77800;
-  --red: #d03b3b;
+  --cyan: #0891b2;
   --green: #168a45;
+  --amber: #b7791f;
+  --red: #d92d20;
+  --violet: #7c3aed;
+  --shadow: 0 10px 28px rgba(21, 31, 54, .07);
 }
 * { box-sizing: border-box; }
 body {
@@ -23,411 +26,821 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
   color: var(--ink);
   background: var(--bg);
-  line-height: 1.55;
+  line-height: 1.5;
 }
-.page { max-width: 1180px; margin: 0 auto; padding: 32px 24px 56px; }
-.hero {
-  padding: 28px 0 24px;
+button, input { font: inherit; }
+.app { max-width: 1280px; margin: 0 auto; padding: 24px; }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 0 22px;
   border-bottom: 1px solid var(--line);
 }
-.eyebrow { color: var(--blue); font-weight: 700; font-size: 14px; }
-h1 { margin: 8px 0 10px; font-size: 34px; line-height: 1.18; letter-spacing: 0; }
-.subtitle { color: var(--muted); font-size: 16px; max-width: 820px; }
+.brand { display: grid; gap: 6px; }
+.brand strong { font-size: 24px; letter-spacing: 0; }
+.brand span, .subtle { color: var(--muted); font-size: 13px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.btn {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: .18s ease;
+}
+.btn:hover { border-color: #9db4d7; box-shadow: 0 3px 10px rgba(37, 99, 235, .08); }
+.btn.active { color: #fff; background: var(--blue); border-color: var(--blue); }
+.btn.primary { color: #fff; background: var(--ink); border-color: var(--ink); }
 .grid { display: grid; gap: 16px; }
-.metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 24px 0; }
+.metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 20px 0; }
 .metric, .panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  box-shadow: var(--shadow);
 }
-.metric { padding: 18px; min-height: 126px; }
+.metric { padding: 16px; min-height: 140px; position: relative; overflow: hidden; }
+.metric::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 12px 14px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  transform: scaleX(var(--meter, .72));
+  transform-origin: left;
+  transition: transform .6s ease;
+}
 .metric-label { color: var(--muted); font-size: 13px; }
-.metric-value { font-size: 30px; line-height: 1.2; font-weight: 760; margin: 8px 0; }
-.metric-note { color: var(--muted); font-size: 13px; }
-.panel { padding: 20px; overflow: hidden; }
-.two { grid-template-columns: 1.1fr .9fr; }
+.metric-value { font-size: 30px; font-weight: 760; margin: 7px 0 4px; }
+.metric-note { color: var(--muted); font-size: 13px; min-height: 38px; }
+.trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
+.up { color: var(--red); }
+.down { color: var(--green); }
+.flat { color: var(--amber); }
+.panel { padding: 18px; overflow: hidden; }
+.section { margin-top: 16px; }
+.two { grid-template-columns: 1.18fr .82fr; }
 .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-h2 { font-size: 21px; margin: 0 0 14px; }
-h3 { font-size: 16px; margin: 0 0 12px; }
-.section { margin-top: 20px; }
-.insights { padding-left: 20px; margin: 0; }
-.insights li { margin: 8px 0; }
-.bar-list { display: grid; gap: 10px; }
-.bar-row { display: grid; grid-template-columns: 150px 1fr 112px; gap: 12px; align-items: center; }
-.bar-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
-.bar-track { height: 12px; background: #edf1f5; border-radius: 999px; overflow: hidden; }
-.bar-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--teal)); border-radius: inherit; }
-.bar-value { color: var(--muted); font-size: 13px; text-align: right; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { border-bottom: 1px solid var(--line); padding: 9px 8px; text-align: left; vertical-align: top; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+h2 { margin: 0; font-size: 18px; }
+h3 { margin: 0 0 8px; font-size: 15px; }
+.segmented { display: inline-flex; padding: 3px; background: #eef3f8; border-radius: 8px; gap: 3px; }
+.segmented .btn {
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.segmented .btn.active { background: #fff; color: var(--blue); box-shadow: 0 1px 4px rgba(16,24,40,.1); }
+canvas { width: 100%; height: 260px; display: block; }
+.donut-wrap { display: grid; grid-template-columns: 190px 1fr; gap: 18px; align-items: center; }
+.legend { display: grid; gap: 10px; }
+.legend-row { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 9px; font-size: 13px; color: #344054; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.insights { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.insights li { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+th, td { border-bottom: 1px solid var(--line); padding: 10px 8px; text-align: left; vertical-align: top; }
 th { color: #344054; background: #f8fafc; font-weight: 700; }
-tbody tr:hover { background: #f8fbff; }
-.tagline { color: var(--muted); margin-top: -8px; margin-bottom: 14px; font-size: 13px; }
-.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.pill { border: 1px solid var(--line); background: #f8fafc; color: #344054; padding: 6px 10px; border-radius: 999px; font-size: 13px; }
-.footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
-.warning { color: var(--amber); font-weight: 700; }
-.bad { color: var(--red); font-weight: 700; }
-.good { color: var(--green); font-weight: 700; }
-@media (max-width: 920px) {
-  .metrics, .two, .three { grid-template-columns: 1fr; }
-  .bar-row { grid-template-columns: 112px 1fr 90px; }
-  h1 { font-size: 28px; }
+tbody tr:hover { background: #f7fbff; }
+.upload {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+.dropzone {
+  border: 1.5px dashed #9db4d7;
+  border-radius: 8px;
+  background: #f9fbff;
+  min-height: 220px;
+  padding: 22px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  transition: .18s ease;
+}
+.dropzone.dragging { background: #edf6ff; border-color: var(--blue); }
+.dropzone input { display: none; }
+.upload-icon { font-size: 34px; margin-bottom: 8px; color: var(--blue); }
+.analysis-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.mini {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.mini span { display: block; color: var(--muted); font-size: 12px; }
+.mini strong { display: block; font-size: 22px; margin-top: 4px; }
+.history-list { display: grid; gap: 8px; max-height: 280px; overflow: auto; padding-right: 4px; }
+.history-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+  display: grid;
+  gap: 4px;
+}
+.history-item button { justify-self: start; margin-top: 4px; }
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eef3f8;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+}
+.status-line { color: var(--muted); font-size: 13px; margin-top: 8px; }
+.empty { color: var(--muted); padding: 18px 0; }
+.footer { color: var(--muted); font-size: 12px; margin: 22px 0 6px; }
+@media (max-width: 980px) {
+  .metrics, .two, .three, .upload { grid-template-columns: 1fr; }
+  .donut-wrap { grid-template-columns: 1fr; }
+  .topbar { align-items: flex-start; flex-direction: column; }
+  .toolbar { justify-content: flex-start; }
+}
+@media (max-width: 560px) {
+  .app { padding: 16px; }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .metric-value { font-size: 26px; }
+  canvas { height: 230px; }
 }
 </style>
 </head>
 <body>
-<main class="page">
-  <header class="hero">
-    <div class="eyebrow">智能客服运营分析</div>
-    <h1>2026-05-14 客服日志数据分析报告</h1>
-    <div class="subtitle">数据来源：5.14-5.15.xlsx；统计区间：2026-05-14 00:00:18 至 2026-05-14 23:59:04。本报告聚焦问答量、转人工、拒识、知识命中、响应效率与高频诉求。</div>
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <strong>智能客服会话运营平台</strong>
+      <span id="reportRange">日报视图：2026-05-14，覆盖 20,073 条问答与 4,962 个会话</span>
+    </div>
+    <div class="toolbar" aria-label="视图切换">
+      <button class="btn active" data-view="today">今日概览</button>
+      <button class="btn" data-view="peak">高峰治理</button>
+      <button class="btn" data-view="knowledge">知识优化</button>
+      <button class="btn primary" id="focusUpload">上传分析</button>
+    </div>
   </header>
 
-  <section class="grid metrics">
-    
-    <section class="metric">
-      <div class="metric-label">问答总量</div>
-      <div class="metric-value">20,073</div>
-      <div class="metric-note">4,962 个会话，3,264 个用户</div>
-    </section>
-    
-    
-    <section class="metric">
-      <div class="metric-label">转人工率</div>
-      <div class="metric-value">62.4%</div>
-      <div class="metric-note">12,524 条触发转人工</div>
-    </section>
-    
-    
-    <section class="metric">
-      <div class="metric-label">拒识率</div>
-      <div class="metric-value">6.2%</div>
-      <div class="metric-note">1,253 条未识别/间接回答</div>
-    </section>
-    
-    
-    <section class="metric">
-      <div class="metric-label">响应时间 P95</div>
-      <div class="metric-value">2,057ms</div>
-      <div class="metric-note">平均 685ms，中位 284ms</div>
-    </section>
-    
-    
-    <section class="metric">
-      <div class="metric-label">直接回答率</div>
-      <div class="metric-value">93.8%</div>
-      <div class="metric-note">18,820 条直接回答</div>
-    </section>
-    
-    
-    <section class="metric">
-      <div class="metric-label">会话深度</div>
-      <div class="metric-value">4.0</div>
-      <div class="metric-note">每会话平均轮次，中位 3 轮</div>
-    </section>
-    
-    
-    <section class="metric">
-      <div class="metric-label">寒暄占比</div>
-      <div class="metric-value">5.1%</div>
-      <div class="metric-note">1,018 条寒暄类请求</div>
-    </section>
-    
-    
-    <section class="metric">
-      <div class="metric-label">敏感请求</div>
-      <div class="metric-value">77</div>
-      <div class="metric-note">占全部请求 0.4%</div>
-    </section>
-    
-  </section>
+  <section class="grid metrics" id="metrics"></section>
 
-  <section class="grid two section">
+  <section class="grid two section" id="viewPanel">
     <div class="panel">
-      <h2>核心发现</h2>
-      <ol class="insights">
-        <li>转人工率为 62.4%，其中标准问句“转人工任务型”命中 11,130 次，是当前最大流量入口，建议单独拆解转人工前置原因。</li><li>拒识率为 6.2%，拒识问句以数字、短语和泛化诉求为主，适合补充菜单澄清、意图改写和兜底追问。</li><li>高峰集中在 09:00-11:59 与 14:00-16:59，16 点单小时达到 2,303 条，排班和人工承接能力应覆盖这个窗口。</li><li>响应时间中位数 284ms，95 分位 2,057ms；整体速度可接受，但 2s 以上请求仍有 1,183 条。</li><li>知识命中集中在入驻、商品上架、账号密码、协议录入、网超迁移等主题，适合优先做知识库精修和入口卡片化。</li>
-      </ol>
-      <div class="pill-row">
-        <span class="pill">转人工治理</span>
-        <span class="pill">拒识问句补库</span>
-        <span class="pill">高峰排班</span>
-        <span class="pill">知识点精修</span>
+      <div class="panel-head">
+        <h2>小时级会话趋势</h2>
+        <div class="segmented">
+          <button class="btn active" data-chart="volume">请求量</button>
+          <button class="btn" data-chart="handoff">转人工率</button>
+          <button class="btn" data-chart="response">响应耗时</button>
+        </div>
       </div>
+      <canvas id="trendChart" width="900" height="320" aria-label="小时级会话趋势图"></canvas>
+      <div class="status-line" id="chartHint">当前显示各小时请求量，柱形会在切换时重新动画呈现。</div>
     </div>
     <div class="panel">
-      <h2>小时级流量</h2>
-      <div class="tagline">仅展示有请求的小时；条形越长表示请求量越高。</div>
-      <div class='bar-list'>
-            <div class="bar-row">
-              <div class="bar-label" title="00:00">00:00</div>
-              <div class="bar-track"><span style="width:0.04%"></span></div>
-              <div class="bar-value">1</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="01:00">01:00</div>
-              <div class="bar-track"><span style="width:0.23%"></span></div>
-              <div class="bar-value">6</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="05:00">05:00</div>
-              <div class="bar-track"><span style="width:0.11%"></span></div>
-              <div class="bar-value">3</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="07:00">07:00</div>
-              <div class="bar-track"><span style="width:1.02%"></span></div>
-              <div class="bar-value">27</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="08:00">08:00</div>
-              <div class="bar-track"><span style="width:32.44%"></span></div>
-              <div class="bar-value">863</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="09:00">09:00</div>
-              <div class="bar-track"><span style="width:100.00%"></span></div>
-              <div class="bar-value">2,660</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="10:00">10:00</div>
-              <div class="bar-track"><span style="width:96.62%"></span></div>
-              <div class="bar-value">2,570</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="11:00">11:00</div>
-              <div class="bar-track"><span style="width:91.32%"></span></div>
-              <div class="bar-value">2,429</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="12:00">12:00</div>
-              <div class="bar-track"><span style="width:41.77%"></span></div>
-              <div class="bar-value">1,111</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="13:00">13:00</div>
-              <div class="bar-track"><span style="width:45.83%"></span></div>
-              <div class="bar-value">1,219</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="14:00">14:00</div>
-              <div class="bar-track"><span style="width:71.43%"></span></div>
-              <div class="bar-value">1,900</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="15:00">15:00</div>
-              <div class="bar-track"><span style="width:85.45%"></span></div>
-              <div class="bar-value">2,273</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="16:00">16:00</div>
-              <div class="bar-track"><span style="width:86.58%"></span></div>
-              <div class="bar-value">2,303</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="17:00">17:00</div>
-              <div class="bar-track"><span style="width:55.90%"></span></div>
-              <div class="bar-value">1,487</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="18:00">18:00</div>
-              <div class="bar-track"><span style="width:21.54%"></span></div>
-              <div class="bar-value">573</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="19:00">19:00</div>
-              <div class="bar-track"><span style="width:15.60%"></span></div>
-              <div class="bar-value">415</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="20:00">20:00</div>
-              <div class="bar-track"><span style="width:3.46%"></span></div>
-              <div class="bar-value">92</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="21:00">21:00</div>
-              <div class="bar-track"><span style="width:2.97%"></span></div>
-              <div class="bar-value">79</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="22:00">22:00</div>
-              <div class="bar-track"><span style="width:0.34%"></span></div>
-              <div class="bar-value">9</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="23:00">23:00</div>
-              <div class="bar-track"><span style="width:1.99%"></span></div>
-              <div class="bar-value">53</div>
-            </div>
-            </div>
+      <div class="panel-head">
+        <h2 id="insightTitle">核心发现</h2>
+        <span class="tag" id="insightTag">运营日报</span>
+      </div>
+      <ul class="insights" id="insights"></ul>
     </div>
   </section>
 
   <section class="grid three section">
     <div class="panel">
-      <h2>回答方式</h2>
-      <div class='bar-list'>
-            <div class="bar-row">
-              <div class="bar-label" title="直接回答">直接回答</div>
-              <div class="bar-track"><span style="width:100.00%"></span></div>
-              <div class="bar-value">18,820 / 93.8%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="间接回答">间接回答</div>
-              <div class="bar-track"><span style="width:6.66%"></span></div>
-              <div class="bar-value">1,253 / 6.2%</div>
-            </div>
-            </div>
+      <div class="panel-head">
+        <h2>回答方式</h2>
+        <span class="tag">直接 / 间接</span>
+      </div>
+      <div class="donut-wrap">
+        <canvas id="answerChart" width="260" height="260" aria-label="回答方式占比"></canvas>
+        <div class="legend" id="answerLegend"></div>
+      </div>
     </div>
     <div class="panel">
-      <h2>知识库类型</h2>
-      <div class='bar-list'>
-            <div class="bar-row">
-              <div class="bar-label" title="任务型">任务型</div>
-              <div class="bar-track"><span style="width:100.00%"></span></div>
-              <div class="bar-value">15,317 / 76.3%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="FAQ">FAQ</div>
-              <div class="bar-track"><span style="width:24.40%"></span></div>
-              <div class="bar-value">3,738 / 18.6%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="寒暄">寒暄</div>
-              <div class="bar-track"><span style="width:6.65%"></span></div>
-              <div class="bar-value">1,018 / 5.1%</div>
-            </div>
-            </div>
+      <div class="panel-head">
+        <h2>知识库类型</h2>
+        <span class="tag">命中来源</span>
+      </div>
+      <div class="donut-wrap">
+        <canvas id="knowledgeChart" width="260" height="260" aria-label="知识库类型占比"></canvas>
+        <div class="legend" id="knowledgeLegend"></div>
+      </div>
     </div>
     <div class="panel">
-      <h2>响应时间分布</h2>
-      <div class='bar-list'>
-            <div class="bar-row">
-              <div class="bar-label" title="300ms内">300ms内</div>
-              <div class="bar-track"><span style="width:100.00%"></span></div>
-              <div class="bar-value">11,016 / 54.9%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="300ms-1s">300ms-1s</div>
-              <div class="bar-track"><span style="width:31.72%"></span></div>
-              <div class="bar-value">3,494 / 17.4%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="1s-2s">1s-2s</div>
-              <div class="bar-track"><span style="width:39.76%"></span></div>
-              <div class="bar-value">4,380 / 21.8%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="2s以上">2s以上</div>
-              <div class="bar-track"><span style="width:10.74%"></span></div>
-              <div class="bar-value">1,183 / 5.9%</div>
-            </div>
-            </div>
+      <div class="panel-head">
+        <h2>响应时间分布</h2>
+        <span class="tag">体验健康度</span>
+      </div>
+      <canvas id="responseChart" width="420" height="260" aria-label="响应时间分布"></canvas>
     </div>
   </section>
 
   <section class="grid two section">
     <div class="panel">
-      <h2>业务类型分布</h2>
-      <div class='bar-list'>
-            <div class="bar-row">
-              <div class="bar-label" title="任务型">任务型</div>
-              <div class="bar-track"><span style="width:100.00%"></span></div>
-              <div class="bar-value">15,317 / 76.3%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="普通知识点">普通知识点</div>
-              <div class="bar-track"><span style="width:24.40%"></span></div>
-              <div class="bar-value">3,738 / 18.6%</div>
-            </div>
-            
-            <div class="bar-row">
-              <div class="bar-label" title="寒暄">寒暄</div>
-              <div class="bar-track"><span style="width:6.65%"></span></div>
-              <div class="bar-value">1,018 / 5.1%</div>
-            </div>
-            </div>
+      <div class="panel-head">
+        <h2>高流量小时转人工</h2>
+        <span class="tag">TOP 10</span>
+      </div>
+      <div class="table-wrap">
+        <table id="peakTable">
+          <thead><tr><th>小时</th><th>总量</th><th>转人工</th><th>转人工率</th><th>建议动作</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
     <div class="panel">
-      <h2>高流量小时转人工情况</h2>
-      <table><thead><tr><th>小时</th><th>总量</th><th>转人工</th><th>转人工率</th></tr></thead><tbody><tr><td>9</td><td>2660</td><td>1631</td><td>61.3%</td></tr><tr><td>10</td><td>2570</td><td>1729</td><td>67.3%</td></tr><tr><td>11</td><td>2429</td><td>1493</td><td>61.5%</td></tr><tr><td>16</td><td>2303</td><td>1422</td><td>61.7%</td></tr><tr><td>15</td><td>2273</td><td>1478</td><td>65.0%</td></tr><tr><td>14</td><td>1900</td><td>1233</td><td>64.9%</td></tr><tr><td>17</td><td>1487</td><td>979</td><td>65.8%</td></tr><tr><td>13</td><td>1219</td><td>821</td><td>67.4%</td></tr><tr><td>12</td><td>1111</td><td>651</td><td>58.6%</td></tr><tr><td>8</td><td>863</td><td>524</td><td>60.7%</td></tr></tbody></table>
+      <div class="panel-head">
+        <h2>TOP 标准问句</h2>
+        <span class="tag">可点击筛选</span>
+      </div>
+      <div class="segmented" id="questionTabs">
+        <button class="btn active" data-topic="handoff">转人工</button>
+        <button class="btn" data-topic="entry">入驻</button>
+        <button class="btn" data-topic="product">商品</button>
+        <button class="btn" data-topic="unknown">拒识</button>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table id="questionTable">
+          <thead><tr><th>问句 / 意图</th><th>命中次数</th><th>占比</th><th>处理建议</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
-  <section class="grid two section">
-    <div class="panel">
-      <h2>TOP 知识点分类</h2>
-      <table><thead><tr><th>知识点分类</th><th>命中次数</th><th>占比</th></tr></thead><tbody><tr><td>全部/转人工二轮</td><td>11130</td><td>55.4%</td></tr><tr><td>全部/入驻</td><td>1638</td><td>8.2%</td></tr><tr><td>全部/通用</td><td>670</td><td>3.3%</td></tr><tr><td>全部/乐采云</td><td>580</td><td>2.9%</td></tr><tr><td>全部/全部</td><td>464</td><td>2.3%</td></tr><tr><td>全部/协议与商品</td><td>464</td><td>2.3%</td></tr><tr><td>全部/其他/指令</td><td>287</td><td>1.4%</td></tr><tr><td>全部/ivr</td><td>239</td><td>1.2%</td></tr><tr><td>全部/全部/核心通用对话/评价</td><td>180</td><td>0.9%</td></tr><tr><td>全部/其他模块/乐采云</td><td>179</td><td>0.9%</td></tr><tr><td>全部/全部/社会义务对话/告别</td><td>167</td><td>0.8%</td></tr><tr><td>全部/通用模块/平台规则及操作/通用操作</td><td>158</td><td>0.8%</td></tr></tbody></table>
+  <section class="panel section" id="uploadPanel">
+    <div class="panel-head">
+      <h2>上传文件即时分析</h2>
+      <div class="segmented">
+        <button class="btn active" id="showLatest">本次结果</button>
+        <button class="btn" id="clearHistory">清空历史</button>
+      </div>
     </div>
-    <div class="panel">
-      <h2>TOP 标准问句</h2>
-      <table><thead><tr><th>标准问句</th><th>命中次数</th><th>占比</th></tr></thead><tbody><tr><td>[259027] 转人工任务型</td><td>11130</td><td>55.4%</td></tr><tr><td>[-] </td><td>1253</td><td>6.2%</td></tr><tr><td>[909] 如何注册入驻</td><td>620</td><td>3.1%</td></tr><tr><td>[1715] 如何上架商品</td><td>422</td><td>2.1%</td></tr><tr><td>[259028] 好的</td><td>404</td><td>2.0%</td></tr><tr><td>[902] 忘记账号密码</td><td>369</td><td>1.8%</td></tr><tr><td>[890] 重听</td><td>286</td><td>1.4%</td></tr><tr><td>[2433] 如何录入协议</td><td>207</td><td>1.0%</td></tr><tr><td>[260077] 按键调整</td><td>174</td><td>0.9%</td></tr><tr><td>[258837] 再见</td><td>167</td><td>0.8%</td></tr><tr><td>[1714] 注册审核</td><td>157</td><td>0.8%</td></tr><tr><td>[260305] 网超迁移</td><td>149</td><td>0.7%</td></tr><tr><td>[3] CA问题合集</td><td>122</td><td>0.6%</td></tr><tr><td>[906] 如何修改注册资料</td><td>114</td><td>0.6%</td></tr><tr><td>[258863] 回答不准确</td><td>104</td><td>0.5%</td></tr></tbody></table>
+    <div class="upload">
+      <div class="dropzone" id="dropzone">
+        <input id="fileInput" type="file" accept=".csv,.json,.txt,.xlsx,.xls">
+        <div>
+          <div class="upload-icon">+</div>
+          <strong>点击或拖拽上传客服日志</strong>
+          <div class="status-line">支持 CSV、JSON、TXT、XLSX。上传后会立即生成字段、行数、关键词和异常信号分析，并保存到本地历史。</div>
+        </div>
+      </div>
+      <div>
+        <div class="analysis-grid" id="uploadStats">
+          <div class="mini"><span>文件数</span><strong>0</strong></div>
+          <div class="mini"><span>最近行数</span><strong>0</strong></div>
+          <div class="mini"><span>风险信号</span><strong>0</strong></div>
+        </div>
+        <div class="panel-head" style="margin-top:8px">
+          <h3>历史上传</h3>
+          <span class="tag" id="historyCount">0 条</span>
+        </div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+    <div class="grid two section">
+      <div>
+        <h3>即时分析结论</h3>
+        <ul class="insights" id="uploadInsights">
+          <li>上传文件后，这里会显示自动分析结果。</li>
+        </ul>
+      </div>
+      <div>
+        <h3>识别到的字段 / 样例</h3>
+        <div class="table-wrap">
+          <table id="sampleTable">
+            <thead><tr><th>字段</th><th>样例值</th></tr></thead>
+            <tbody><tr><td colspan="2" class="empty">暂无数据</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="grid two section">
-    <div class="panel">
-      <h2>用户原始问句 TOP20</h2>
-      <div class="tagline">用于识别用户真实表达、入口词和菜单按键行为。</div>
-      <table><thead><tr><th>用户问句</th><th>出现次数</th><th>占比</th></tr></thead><tbody><tr><td>转人工</td><td>2285</td><td>11.4%</td></tr><tr><td>6</td><td>1869</td><td>9.3%</td></tr><tr><td>人工服务</td><td>1410</td><td>7.0%</td></tr><tr><td>人工客服</td><td>726</td><td>3.6%</td></tr><tr><td>2</td><td>565</td><td>2.8%</td></tr><tr><td>1</td><td>498</td><td>2.5%</td></tr><tr><td>转人工服务</td><td>405</td><td>2.0%</td></tr><tr><td>人工</td><td>324</td><td>1.6%</td></tr><tr><td>转人工客服</td><td>222</td><td>1.1%</td></tr><tr><td>9</td><td>219</td><td>1.1%</td></tr><tr><td>3</td><td>192</td><td>1.0%</td></tr><tr><td>呃转人工</td><td>182</td><td>0.9%</td></tr><tr><td>人工服务啊</td><td>162</td><td>0.8%</td></tr><tr><td>按键导航</td><td>121</td><td>0.6%</td></tr><tr><td>供应商</td><td>111</td><td>0.6%</td></tr><tr><td>呃人工服务</td><td>106</td><td>0.5%</td></tr><tr><td>转人工啊</td><td>100</td><td>0.5%</td></tr><tr><td>4</td><td>93</td><td>0.5%</td></tr><tr><td>5</td><td>92</td><td>0.5%</td></tr><tr><td>网上超市</td><td>86</td><td>0.4%</td></tr></tbody></table>
-    </div>
-    <div class="panel">
-      <h2>转人工问句 TOP15</h2>
-      <div class="tagline">建议重点拆解这些入口背后的真实问题类型。</div>
-      <table><thead><tr><th>转人工问句</th><th>转人工次数</th><th>占转人工比</th></tr></thead><tbody><tr><td>6</td><td>1842</td><td>14.7%</td></tr><tr><td>转人工</td><td>1825</td><td>14.6%</td></tr><tr><td>人工服务</td><td>1138</td><td>9.1%</td></tr><tr><td>人工客服</td><td>592</td><td>4.7%</td></tr><tr><td>2</td><td>385</td><td>3.1%</td></tr><tr><td>1</td><td>370</td><td>3.0%</td></tr><tr><td>转人工服务</td><td>327</td><td>2.6%</td></tr><tr><td>人工</td><td>263</td><td>2.1%</td></tr><tr><td>转人工客服</td><td>183</td><td>1.5%</td></tr><tr><td>9</td><td>147</td><td>1.2%</td></tr><tr><td>呃转人工</td><td>140</td><td>1.1%</td></tr><tr><td>人工服务啊</td><td>137</td><td>1.1%</td></tr><tr><td>3</td><td>131</td><td>1.0%</td></tr><tr><td>呃人工服务</td><td>88</td><td>0.7%</td></tr><tr><td>转人工啊</td><td>76</td><td>0.6%</td></tr></tbody></table>
-    </div>
-  </section>
-
-  <section class="grid two section">
-    <div class="panel">
-      <h2>拒识问句 TOP15</h2>
-      <div class="tagline">适合补充意图识别、菜单澄清和兜底追问。</div>
-      <table><thead><tr><th>拒识问句</th><th>拒识次数</th><th>占拒识比</th></tr></thead><tbody><tr><td>那个</td><td>9</td><td>0.7%</td></tr><tr><td>这个</td><td>7</td><td>0.6%</td></tr><tr><td>呃呃</td><td>7</td><td>0.6%</td></tr><tr><td>今天</td><td>5</td><td>0.4%</td></tr><tr><td>然后</td><td>5</td><td>0.4%</td></tr><tr><td>就是</td><td>4</td><td>0.3%</td></tr><tr><td>哎呀</td><td>4</td><td>0.3%</td></tr><tr><td>转人</td><td>3</td><td>0.2%</td></tr><tr><td>新疆</td><td>3</td><td>0.2%</td></tr><tr><td>先生</td><td>3</td><td>0.2%</td></tr><tr><td>呃协议签订</td><td>3</td><td>0.2%</td></tr><tr><td>稍等</td><td>3</td><td>0.2%</td></tr><tr><td>没事没事嗯</td><td>3</td><td>0.2%</td></tr><tr><td>呃没有了</td><td>3</td><td>0.2%</td></tr><tr><td>人工务</td><td>3</td><td>0.2%</td></tr></tbody></table>
-    </div>
-    <div class="panel">
-      <h2>运营建议</h2>
-      <table>
-        <thead><tr><th>优先级</th><th>建议动作</th><th>预期收益</th></tr></thead>
-        <tbody>
-          <tr><td><span class="bad">高</span></td><td>拆解“转人工任务型”链路，标注转人工前最后一轮用户意图，区分必须人工与可机器人承接场景。</td><td>降低无效转人工，释放人工座席压力。</td></tr>
-          <tr><td><span class="bad">高</span></td><td>围绕入驻、上架商品、账号密码、协议录入、保证金等高频知识点做答案精修和同义问扩展。</td><td>提升直接回答率和一次解决率。</td></tr>
-          <tr><td><span class="warning">中</span></td><td>对数字按键、短语式输入、泛化“人工/供应商/网上超市”等问句增加澄清卡片或菜单式追问。</td><td>减少拒识与错误路由。</td></tr>
-          <tr><td><span class="warning">中</span></td><td>09:00-11:59、14:00-16:59 做高峰容量保障，尤其关注 15-16 点。</td><td>提升高峰承接稳定性。</td></tr>
-          <tr><td><span class="good">持续</span></td><td>建立每日监控：转人工率、拒识率、P95 响应时间、TOP 失败问句、TOP 新增问句。</td><td>让知识库优化形成闭环。</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <div class="footer">报告由本地数据生成，未使用外部网络资源。用户评价与原因记录字段为空，暂未纳入满意度分析。</div>
+  <div class="footer">数据会保存在当前浏览器的本地存储中，不会上传到外部服务器。Excel 解析依赖浏览器可访问的前端解析库；如离线打开，CSV / JSON / TXT 仍可正常分析。</div>
 </main>
+
+<script>
+const baseData = {
+  metrics: [
+    ["问答总量", 20073, "20,073", "4,962 个会话，3,264 个用户", "up", "+8.6%", .86],
+    ["转人工率", 62.4, "62.4%", "12,524 条触发转人工", "up", "+3.1%", .62],
+    ["拒识率", 6.2, "6.2%", "1,253 条未识别或间接回答", "down", "-0.8%", .38],
+    ["P95 响应时间", 2057, "2,057ms", "平均 685ms，中位 284ms", "flat", "持平", .58],
+    ["直接回答率", 93.8, "93.8%", "18,820 条直接回答", "up", "+1.4%", .94],
+    ["会话深度", 4.0, "4.0", "每会话平均轮次，中位 3 轮", "flat", "稳定", .46],
+    ["寒暄占比", 5.1, "5.1%", "1,018 条寒暄类请求", "down", "-0.5%", .28],
+    ["敏感请求", 77, "77", "占全部请求 0.4%", "flat", "低位", .18]
+  ],
+  hours: [
+    ["00:00", 1, 0, 210], ["01:00", 6, 1, 260], ["05:00", 3, 0, 190], ["07:00", 27, 12, 330],
+    ["08:00", 863, 524, 510], ["09:00", 2660, 1631, 760], ["10:00", 2570, 1729, 820], ["11:00", 2429, 1493, 790],
+    ["12:00", 1111, 651, 650], ["13:00", 1219, 821, 690], ["14:00", 1900, 1233, 720], ["15:00", 2273, 1478, 880],
+    ["16:00", 2303, 1422, 910], ["17:00", 1487, 979, 780], ["18:00", 573, 322, 540], ["19:00", 415, 241, 490],
+    ["20:00", 92, 41, 370], ["21:00", 79, 34, 340], ["22:00", 9, 2, 280], ["23:00", 53, 21, 320]
+  ],
+  answer: [["直接回答", 18820, "#2563eb"], ["间接回答 / 拒识", 1253, "#d92d20"]],
+  knowledge: [["任务型", 15317, "#2563eb"], ["FAQ", 3738, "#0891b2"], ["寒暄", 1018, "#7c3aed"]],
+  response: [["300ms内", 11016], ["300ms-1s", 3494], ["1s-2s", 4380], ["2s以上", 1183]],
+  views: {
+    today: {
+      title: "核心发现",
+      tag: "运营日报",
+      items: [
+        "转人工率为 62.4%，其中“转人工任务型”命中 11,130 次，是当前最大的人工入口。",
+        "拒识率为 6.2%，拒识问句以数字、短语和泛化诉求为主，适合补充澄清菜单。",
+        "高峰集中在 09:00-11:59 与 14:00-16:59，16 点单小时达到 2,303 条。",
+        "响应时间中位数 284ms，P95 为 2,057ms，2 秒以上请求仍有 1,183 条。"
+      ]
+    },
+    peak: {
+      title: "高峰治理",
+      tag: "排班与承接",
+      items: [
+        "09:00-11:00 连续三小时流量超过 2,400，建议前置人工坐席与机器人兜底提示。",
+        "15:00-16:00 响应耗时偏高，可针对商品上架、入驻、协议录入等高频任务做快捷入口。",
+        "午间 12:00-13:00 需求没有完全回落，建议保留弹性班次，避免人工队列堆积。",
+        "高峰小时的转人工率多在 61%-67%，说明问题不是单点异常，而是入口设计需要拆解。"
+      ]
+    },
+    knowledge: {
+      title: "知识优化",
+      tag: "知识库闭环",
+      items: [
+        "优先精修入驻、商品上架、账号密码、协议录入、网超迁移等高频知识点。",
+        "数字按键类输入占比较高，应增加菜单澄清卡片，减少用户直接要求人工。",
+        "把转人工前最后一轮用户意图沉淀为新标签，可快速定位“可机器承接”的场景。",
+        "建立每日新增问句、失败问句、P95 响应时间和知识命中率的固定巡检。"
+      ]
+    }
+  },
+  questions: {
+    handoff: [["[259027] 转人工任务型", 11130, "55.4%", "拆解转人工前置原因"], ["转人工", 2285, "11.4%", "增加自助分流入口"], ["人工服务", 1410, "7.0%", "设置问题类型澄清"], ["人工客服", 726, "3.6%", "识别紧急与非紧急场景"]],
+    entry: [["[909] 如何注册入驻", 620, "3.1%", "补齐流程步骤和材料清单"], ["注册审核", 157, "0.8%", "增加审核时效解释"], ["如何修改注册资料", 114, "0.6%", "提供资料修改入口"]],
+    product: [["[1715] 如何上架商品", 422, "2.1%", "提供图文步骤和常见失败原因"], ["协议与商品", 464, "2.3%", "拆分商品与协议两类意图"], ["保证金", 97, "0.5%", "补充金额与退还规则"]],
+    unknown: [["[-] 未识别", 1253, "6.2%", "补充短语识别和澄清追问"], ["那个 / 这个", 16, "1.3%", "引导用户选择业务类型"], ["稍等 / 没事", 6, "0.5%", "识别为会话状态表达"]]
+  }
+};
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const historyKey = "customer-session-upload-history-v2";
+let uploadHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+let currentChart = "volume";
+let animationTick = 0;
+
+function formatNum(n) {
+  return Number(n || 0).toLocaleString("zh-CN");
+}
+
+function renderMetrics() {
+  $("#metrics").innerHTML = baseData.metrics.map(item => {
+    const [label, raw, value, note, tone, trend, meter] = item;
+    return `<section class="metric" style="--meter:${meter}">
+      <div class="metric-label">${label}</div>
+      <div class="metric-value" data-target="${raw}" data-text="${value}">0</div>
+      <div class="metric-note">${note}</div>
+      <div class="trend ${tone}">${trend}</div>
+    </section>`;
+  }).join("");
+  $$(".metric-value").forEach(el => animateNumber(el));
+}
+
+function animateNumber(el) {
+  const target = Number(el.dataset.target);
+  const text = el.dataset.text;
+  const start = performance.now();
+  const duration = 800;
+  function step(now) {
+    const p = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const value = target * eased;
+    if (text.includes("%")) el.textContent = value.toFixed(1) + "%";
+    else if (text.includes("ms")) el.textContent = formatNum(Math.round(value)) + "ms";
+    else if (target < 20) el.textContent = value.toFixed(1);
+    else el.textContent = formatNum(Math.round(value));
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = text;
+  }
+  requestAnimationFrame(step);
+}
+
+function renderInsights(view) {
+  const data = baseData.views[view];
+  $("#insightTitle").textContent = data.title;
+  $("#insightTag").textContent = data.tag;
+  $("#insights").innerHTML = data.items.map(item => `<li>${item}</li>`).join("");
+}
+
+function setupViewButtons() {
+  $$(".toolbar .btn[data-view]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $$(".toolbar .btn[data-view]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderInsights(btn.dataset.view);
+    });
+  });
+  $("#focusUpload").addEventListener("click", () => $("#uploadPanel").scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+function setupChartButtons() {
+  $$(".segmented .btn[data-chart]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $$(".segmented .btn[data-chart]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentChart = btn.dataset.chart;
+      const hints = {
+        volume: "当前显示各小时请求量，柱形越高表示会话越集中。",
+        handoff: "当前显示各小时转人工率，红色折线越高表示人工承接压力越大。",
+        response: "当前显示各小时平均响应耗时，用于定位体验波动。"
+      };
+      $("#chartHint").textContent = hints[currentChart];
+      drawTrend(true);
+    });
+  });
+}
+
+function drawTrend(animate = false) {
+  const canvas = $("#trendChart");
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const pad = { l: 44, r: 18, t: 18, b: 42 };
+  const rows = baseData.hours;
+  let values = rows.map(r => r[1]);
+  let color = "#2563eb";
+  let suffix = "";
+  if (currentChart === "handoff") {
+    values = rows.map(r => +(r[2] / r[1] * 100 || 0).toFixed(1));
+    color = "#d92d20";
+    suffix = "%";
+  }
+  if (currentChart === "response") {
+    values = rows.map(r => r[3]);
+    color = "#0891b2";
+    suffix = "ms";
+  }
+  const max = Math.max(...values) * 1.15;
+  const progress = animate ? 0 : 1;
+  const started = performance.now();
+  const id = ++animationTick;
+  function frame(now) {
+    if (id !== animationTick) return;
+    const p = animate ? Math.min(1, (now - started) / 650) : 1;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#e7edf4";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const y = pad.t + (h - pad.t - pad.b) * i / 4;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(w - pad.r, y);
+      ctx.stroke();
+    }
+    const areaW = w - pad.l - pad.r;
+    const areaH = h - pad.t - pad.b;
+    const gap = 7;
+    const barW = Math.max(6, areaW / values.length - gap);
+    values.forEach((v, i) => {
+      const x = pad.l + i * areaW / values.length + gap / 2;
+      const barH = areaH * (v / max) * (1 - Math.pow(1 - p, 3));
+      const y = h - pad.b - barH;
+      const gradient = ctx.createLinearGradient(0, y, 0, h - pad.b);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, "#86b7ff");
+      ctx.fillStyle = gradient;
+      roundRect(ctx, x, y, barW, barH, 5);
+      ctx.fill();
+      if (i % 2 === 0) {
+        ctx.fillStyle = "#667085";
+        ctx.font = "12px Microsoft YaHei, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(rows[i][0].slice(0, 2), x + barW / 2, h - 16);
+      }
+    });
+    const peak = values.indexOf(Math.max(...values));
+    const px = pad.l + peak * areaW / values.length + barW / 2;
+    const py = h - pad.b - areaH * (values[peak] / max) * p - 10;
+    ctx.fillStyle = "#182033";
+    ctx.font = "12px Microsoft YaHei, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`${rows[peak][0]} ${formatNum(values[peak])}${suffix}`, px + 20, Math.max(16, py));
+    if (p < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.closePath();
+}
+
+function drawDonut(canvasId, legendId, rows) {
+  const canvas = $(canvasId);
+  const ctx = canvas.getContext("2d");
+  const total = rows.reduce((sum, row) => sum + row[1], 0);
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  let start = -Math.PI / 2;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  rows.forEach(row => {
+    const angle = Math.PI * 2 * row[1] / total;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.fillStyle = row[2];
+    ctx.arc(cx, cy, 104, start, start + angle);
+    ctx.closePath();
+    ctx.fill();
+    start += angle;
+  });
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.arc(cx, cy, 64, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#182033";
+  ctx.font = "700 22px Microsoft YaHei, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(formatNum(total), cx, cy + 6);
+  $(legendId).innerHTML = rows.map(row => `<div class="legend-row">
+    <span class="dot" style="background:${row[2]}"></span><span>${row[0]}</span><strong>${(row[1] / total * 100).toFixed(1)}%</strong>
+  </div>`).join("");
+}
+
+function drawResponse() {
+  const canvas = $("#responseChart");
+  const ctx = canvas.getContext("2d");
+  const rows = baseData.response;
+  const max = Math.max(...rows.map(r => r[1]));
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  rows.forEach((row, i) => {
+    const y = 32 + i * 52;
+    const width = 290 * row[1] / max;
+    ctx.fillStyle = "#edf2f7";
+    roundRect(ctx, 105, y, 290, 18, 9);
+    ctx.fill();
+    ctx.fillStyle = ["#168a45", "#2563eb", "#b7791f", "#d92d20"][i];
+    roundRect(ctx, 105, y, width, 18, 9);
+    ctx.fill();
+    ctx.fillStyle = "#344054";
+    ctx.font = "13px Microsoft YaHei, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(row[0], 8, y + 14);
+    ctx.fillText(`${formatNum(row[1])} / ${(row[1] / 20073 * 100).toFixed(1)}%`, 105, y + 38);
+  });
+}
+
+function renderPeakTable() {
+  const rows = baseData.hours
+    .filter(r => r[1] > 800)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+  $("#peakTable tbody").innerHTML = rows.map(row => {
+    const rate = (row[2] / row[1] * 100).toFixed(1);
+    const action = rate > 65 ? "加强分流与人工排队提示" : "保持坐席承接并监控耗时";
+    return `<tr><td>${row[0]}</td><td>${formatNum(row[1])}</td><td>${formatNum(row[2])}</td><td>${rate}%</td><td>${action}</td></tr>`;
+  }).join("");
+}
+
+function setupQuestionTabs() {
+  const render = topic => {
+    $("#questionTable tbody").innerHTML = baseData.questions[topic].map(row =>
+      `<tr><td>${row[0]}</td><td>${formatNum(row[1])}</td><td>${row[2]}</td><td>${row[3]}</td></tr>`
+    ).join("");
+  };
+  $("#questionTabs").addEventListener("click", event => {
+    const btn = event.target.closest("button[data-topic]");
+    if (!btn) return;
+    $$("#questionTabs .btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    render(btn.dataset.topic);
+  });
+  render("handoff");
+}
+
+function setupUpload() {
+  const input = $("#fileInput");
+  const dropzone = $("#dropzone");
+  dropzone.addEventListener("click", () => input.click());
+  input.addEventListener("change", () => input.files[0] && analyzeFile(input.files[0]));
+  ["dragenter", "dragover"].forEach(type => dropzone.addEventListener(type, event => {
+    event.preventDefault();
+    dropzone.classList.add("dragging");
+  }));
+  ["dragleave", "drop"].forEach(type => dropzone.addEventListener(type, event => {
+    event.preventDefault();
+    dropzone.classList.remove("dragging");
+  }));
+  dropzone.addEventListener("drop", event => {
+    const file = event.dataTransfer.files[0];
+    if (file) analyzeFile(file);
+  });
+  $("#clearHistory").addEventListener("click", () => {
+    uploadHistory = [];
+    localStorage.removeItem(historyKey);
+    renderUploadHistory();
+    renderUploadResult(null);
+  });
+  $("#historyList").addEventListener("click", event => {
+    const btn = event.target.closest("button[data-index]");
+    if (btn) renderUploadResult(uploadHistory[Number(btn.dataset.index)]);
+  });
+  renderUploadHistory();
+  renderUploadResult(uploadHistory[0] || null);
+}
+
+async function analyzeFile(file) {
+  const ext = file.name.split(".").pop().toLowerCase();
+  let result;
+  try {
+    if (["xlsx", "xls"].includes(ext) && window.XLSX) result = await analyzeExcel(file);
+    else if (["csv", "txt", "json"].includes(ext)) result = await analyzeTextLike(file, ext);
+    else result = buildFallbackResult(file, "暂不支持该格式的内容解析，已完成文件级分析。");
+  } catch (err) {
+    result = buildFallbackResult(file, "文件内容解析失败，已保留文件级信息。");
+  }
+  uploadHistory.unshift(result);
+  uploadHistory = uploadHistory.slice(0, 20);
+  localStorage.setItem(historyKey, JSON.stringify(uploadHistory));
+  renderUploadHistory();
+  renderUploadResult(result);
+}
+
+function buildFallbackResult(file, message) {
+  return {
+    name: file.name,
+    time: new Date().toLocaleString("zh-CN"),
+    size: file.size,
+    rows: 0,
+    columns: [],
+    sample: {},
+    risks: [],
+    keywords: [],
+    insights: [message, `文件大小 ${(file.size / 1024).toFixed(1)} KB，已写入历史记录。`]
+  };
+}
+
+async function analyzeExcel(file) {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+  return summarizeRows(file, rows, `已读取工作表：${workbook.SheetNames[0]}`);
+}
+
+async function analyzeTextLike(file, ext) {
+  const text = await file.text();
+  if (ext === "json") {
+    const parsed = JSON.parse(text);
+    const rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed.data) ? parsed.data : [parsed];
+    return summarizeRows(file, rows, "已识别 JSON 数据结构。");
+  }
+  const rows = parseDelimited(text);
+  return summarizeRows(file, rows, ext === "csv" ? "已识别 CSV 表格数据。" : "已识别文本内容并按行分析。");
+}
+
+function parseDelimited(text) {
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  if (!lines.length) return [];
+  const delimiter = lines[0].includes("\t") ? "\t" : ",";
+  const headers = splitLine(lines[0], delimiter);
+  if (headers.length > 1) {
+    return lines.slice(1).map(line => {
+      const cells = splitLine(line, delimiter);
+      return Object.fromEntries(headers.map((h, i) => [h || `字段${i + 1}`, cells[i] || ""]));
+    });
+  }
+  return lines.map((line, i) => ({ 行号: i + 1, 内容: line }));
+}
+
+function splitLine(line, delimiter) {
+  const cells = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') quoted = !quoted;
+    else if (char === delimiter && !quoted) {
+      cells.push(cell.trim());
+      cell = "";
+    } else cell += char;
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+
+function summarizeRows(file, rows, prefix) {
+  const columns = rows.length ? Object.keys(rows[0]) : [];
+  const text = rows.map(row => Object.values(row).join(" ")).join(" ").toLowerCase();
+  const riskWords = ["转人工", "人工", "投诉", "失败", "拒识", "不知道", "错误", "超时", "慢", "密码", "审核"];
+  const risks = riskWords.map(word => ({ word, count: countText(text, word.toLowerCase()) })).filter(item => item.count > 0);
+  const keywords = columns.filter(col => /时间|用户|会话|问题|答案|意图|分类|响应|人工|状态/.test(col));
+  const rowCount = rows.length;
+  const insights = [
+    prefix,
+    `共识别 ${formatNum(rowCount)} 行、${columns.length} 个字段。${keywords.length ? "关键字段包括：" + keywords.slice(0, 5).join("、") + "。" : "建议检查字段命名，便于后续自动归因。"}`,
+    risks.length ? `发现 ${risks.length} 类风险信号，其中“${risks[0].word}”出现 ${risks[0].count} 次。` : "未在样本中发现明显风险关键词，可继续抽样复核。",
+    rowCount > 1000 ? "数据量较大，建议按小时、意图、是否转人工继续拆分。" : "数据量适中，适合先做人审标注和字段校准。"
+  ];
+  return {
+    name: file.name,
+    time: new Date().toLocaleString("zh-CN"),
+    size: file.size,
+    rows: rowCount,
+    columns,
+    sample: rows[0] || {},
+    risks,
+    keywords,
+    insights
+  };
+}
+
+function countText(text, word) {
+  if (!word) return 0;
+  return (text.match(new RegExp(escapeRegExp(word), "g")) || []).length;
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function renderUploadHistory() {
+  $("#historyCount").textContent = `${uploadHistory.length} 条`;
+  if (!uploadHistory.length) {
+    $("#historyList").innerHTML = `<div class="empty">暂无历史上传</div>`;
+  } else {
+    $("#historyList").innerHTML = uploadHistory.map((item, index) => `<div class="history-item">
+      <strong>${item.name}</strong>
+      <span class="subtle">${item.time} · ${(item.size / 1024).toFixed(1)} KB · ${formatNum(item.rows)} 行</span>
+      <span class="subtle">风险信号：${item.risks.length ? item.risks.map(r => `${r.word} ${r.count}`).slice(0, 3).join("，") : "暂无"}</span>
+      <button class="btn" data-index="${index}">查看结果</button>
+    </div>`).join("");
+  }
+  const latest = uploadHistory[0];
+  $("#uploadStats").innerHTML = `
+    <div class="mini"><span>历史文件数</span><strong>${uploadHistory.length}</strong></div>
+    <div class="mini"><span>最近行数</span><strong>${formatNum(latest ? latest.rows : 0)}</strong></div>
+    <div class="mini"><span>风险信号</span><strong>${latest ? latest.risks.length : 0}</strong></div>`;
+}
+
+function renderUploadResult(result) {
+  if (!result) {
+    $("#uploadInsights").innerHTML = `<li>上传文件后，这里会显示自动分析结果。</li>`;
+    $("#sampleTable tbody").innerHTML = `<tr><td colspan="2" class="empty">暂无数据</td></tr>`;
+    return;
+  }
+  $("#uploadInsights").innerHTML = result.insights.map(item => `<li>${item}</li>`).join("");
+  const entries = Object.entries(result.sample).slice(0, 12);
+  $("#sampleTable tbody").innerHTML = entries.length
+    ? entries.map(([key, value]) => `<tr><td>${key}</td><td>${String(value).slice(0, 120)}</td></tr>`).join("")
+    : `<tr><td colspan="2" class="empty">未识别到可展示的样例字段</td></tr>`;
+}
+
+function init() {
+  renderMetrics();
+  renderInsights("today");
+  setupViewButtons();
+  setupChartButtons();
+  drawTrend(true);
+  drawDonut("#answerChart", "#answerLegend", baseData.answer);
+  drawDonut("#knowledgeChart", "#knowledgeLegend", baseData.knowledge);
+  drawResponse();
+  renderPeakTable();
+  setupQuestionTabs();
+  setupUpload();
+}
+
+window.addEventListener("resize", () => {
+  drawTrend(false);
+  drawDonut("#answerChart", "#answerLegend", baseData.answer);
+  drawDonut("#knowledgeChart", "#knowledgeLegend", baseData.knowledge);
+  drawResponse();
+});
+init();
+</script>
 </body>
 </html>
