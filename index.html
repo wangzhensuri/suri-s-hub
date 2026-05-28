@@ -55,6 +55,7 @@ button, input { font: inherit; }
 .btn:hover { border-color: #9db4d7; box-shadow: 0 3px 10px rgba(37, 99, 235, .08); }
 .btn.active { color: #fff; background: var(--blue); border-color: var(--blue); }
 .btn.primary { color: #fff; background: var(--ink); border-color: var(--ink); }
+.btn.tiny { min-height: 28px; padding: 4px 8px; font-size: 12px; }
 .grid { display: grid; gap: 16px; }
 .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 20px 0; }
 .metric, .panel {
@@ -64,6 +65,7 @@ button, input { font: inherit; }
   box-shadow: var(--shadow);
 }
 .metric { padding: 16px; min-height: 140px; position: relative; overflow: hidden; }
+.metric.alert { border-color: rgba(217,45,32,.45); box-shadow: 0 0 0 3px rgba(217,45,32,.08), var(--shadow); }
 .metric::after {
   content: "";
   position: absolute;
@@ -79,6 +81,9 @@ button, input { font: inherit; }
 .metric-value { font-size: 30px; font-weight: 760; margin: 7px 0 4px; }
 .metric-note { color: var(--muted); font-size: 13px; min-height: 38px; }
 .trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; }
+.trend::before { content: "→"; }
+.trend.up::before { content: "▲"; }
+.trend.down::before { content: "▼"; }
 .up { color: var(--red); }
 .down { color: var(--green); }
 .flat { color: var(--amber); }
@@ -105,6 +110,24 @@ h3 { margin: 0 0 8px; font-size: 15px; }
 }
 .segmented .btn.active { background: #fff; color: var(--blue); box-shadow: 0 1px 4px rgba(16,24,40,.1); }
 canvas { width: 100%; height: 260px; display: block; }
+.hidden { display: none !important; }
+.board-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.history-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.history-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.compare-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfe; }
+.compare-card span { color: var(--muted); font-size: 12px; }
+.compare-card strong { display: block; font-size: 20px; margin: 3px 0; }
+.ops-grid { grid-template-columns: 1fr 1fr 1fr; }
+.action-card { border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; padding: 14px; display: grid; gap: 10px; }
+.action-card strong { font-size: 15px; }
+.action-card ul { margin: 0; padding-left: 18px; color: #344054; font-size: 13px; }
+.gap-list { display: grid; gap: 8px; }
+.gap-item { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fff; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.table-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable::after { content: " ↕"; color: var(--muted); font-weight: 400; }
+.toast { position: fixed; right: 22px; bottom: 22px; background: var(--ink); color: #fff; border-radius: 8px; padding: 10px 12px; font-size: 13px; opacity: 0; transform: translateY(8px); transition: .18s ease; pointer-events: none; z-index: 10; }
+.toast.show { opacity: 1; transform: translateY(0); }
 .donut-wrap { display: grid; grid-template-columns: 190px 1fr; gap: 18px; align-items: center; }
 .legend { display: grid; gap: 10px; }
 .legend-row { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 9px; font-size: 13px; color: #344054; }
@@ -173,7 +196,7 @@ tbody tr:hover { background: #f7fbff; }
 .empty { color: var(--muted); padding: 18px 0; }
 .footer { color: var(--muted); font-size: 12px; margin: 22px 0 6px; }
 @media (max-width: 980px) {
-  .metrics, .two, .three, .upload { grid-template-columns: 1fr; }
+  .metrics, .two, .three, .upload, .ops-grid, .history-summary { grid-template-columns: 1fr; }
   .donut-wrap { grid-template-columns: 1fr; }
   .topbar { align-items: flex-start; flex-direction: column; }
   .toolbar { justify-content: flex-start; }
@@ -201,15 +224,41 @@ tbody tr:hover { background: #f7fbff; }
     </div>
   </header>
 
-  <section class="grid metrics" id="metrics"></section>
+  <section class="panel section">
+    <div class="board-bar">
+      <div class="segmented" id="boardTabs" aria-label="看板切换">
+        <button class="btn active" data-board="realtime">当日实时看板</button>
+        <button class="btn" data-board="history">历史趋势看板</button>
+      </div>
+      <div class="history-controls hidden" id="historyControls">
+        <span class="subtle">时间范围</span>
+        <div class="segmented">
+          <button class="btn active" data-range="7">近7天</button>
+          <button class="btn" data-range="30">近30天</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <section class="grid two section" id="viewPanel">
+  <section class="grid metrics realtime-block" id="metrics"></section>
+
+  <section class="panel section hidden" id="historyPanel">
+    <div class="panel-head">
+      <h2>核心指标连续趋势</h2>
+      <span class="tag" id="historyTag">近7天</span>
+    </div>
+    <canvas id="historyChart" width="1100" height="360" aria-label="历史趋势曲线"></canvas>
+    <div class="history-summary" id="historySummary"></div>
+  </section>
+
+  <section class="grid two section realtime-block" id="viewPanel">
     <div class="panel">
       <div class="panel-head">
         <h2>小时级会话趋势</h2>
         <div class="segmented">
           <button class="btn active" data-chart="volume">请求量</button>
           <button class="btn" data-chart="handoff">转人工率</button>
+          <button class="btn" data-chart="compare">双轴对比</button>
           <button class="btn" data-chart="response">响应耗时</button>
         </div>
       </div>
@@ -225,7 +274,24 @@ tbody tr:hover { background: #f7fbff; }
     </div>
   </section>
 
-  <section class="grid three section">
+  <section class="grid two section realtime-block" id="opsPanel">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>精准运营建议</h2>
+        <span class="tag">按问题类型落地</span>
+      </div>
+      <div class="grid ops-grid" id="actionCards"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>知识缺口清单</h2>
+        <span class="tag" id="gapCount">0 项</span>
+      </div>
+      <div class="gap-list" id="gapList"></div>
+    </div>
+  </section>
+
+  <section class="grid three section realtime-block">
     <div class="panel">
       <div class="panel-head">
         <h2>回答方式</h2>
@@ -255,15 +321,19 @@ tbody tr:hover { background: #f7fbff; }
     </div>
   </section>
 
-  <section class="grid two section">
+  <section class="grid two section realtime-block">
     <div class="panel">
       <div class="panel-head">
         <h2>高流量小时转人工</h2>
-        <span class="tag">TOP 10</span>
+        <div class="table-tools">
+          <span class="tag">TOP 10</span>
+          <button class="btn tiny" data-copy-table="peakTable">复制</button>
+          <button class="btn tiny" data-export-table="peakTable">导出CSV</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table id="peakTable">
-          <thead><tr><th>小时</th><th>总量</th><th>转人工</th><th>转人工率</th><th>建议动作</th></tr></thead>
+          <thead><tr><th class="sortable">小时</th><th class="sortable">总量</th><th class="sortable">转人工</th><th class="sortable">转人工率</th><th>建议动作</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -271,7 +341,11 @@ tbody tr:hover { background: #f7fbff; }
     <div class="panel">
       <div class="panel-head">
         <h2>TOP 标准问句</h2>
-        <span class="tag">可点击筛选</span>
+        <div class="table-tools">
+          <span class="tag">可点击筛选</span>
+          <button class="btn tiny" data-copy-table="questionTable">复制</button>
+          <button class="btn tiny" data-export-table="questionTable">导出CSV</button>
+        </div>
       </div>
       <div class="segmented" id="questionTabs">
         <button class="btn active" data-topic="handoff">转人工</button>
@@ -281,14 +355,14 @@ tbody tr:hover { background: #f7fbff; }
       </div>
       <div class="table-wrap" style="margin-top:12px">
         <table id="questionTable">
-          <thead><tr><th>问句 / 意图</th><th>命中次数</th><th>占比</th><th>处理建议</th></tr></thead>
+          <thead><tr><th class="sortable">问句 / 意图</th><th class="sortable">命中次数</th><th class="sortable">占比</th><th>处理建议</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <section class="panel section" id="uploadPanel">
+  <section class="panel section realtime-block" id="uploadPanel">
     <div class="panel-head">
       <h2>上传文件即时分析</h2>
       <div class="segmented">
@@ -338,6 +412,7 @@ tbody tr:hover { background: #f7fbff; }
   </section>
 
   <div class="footer">数据会保存在当前浏览器的本地存储中，不会上传到外部服务器。Excel 解析依赖浏览器可访问的前端解析库；如离线打开，CSV / JSON / TXT 仍可正常分析。</div>
+  <div class="toast" id="toast">已复制</div>
 </main>
 
 <script>
@@ -409,6 +484,9 @@ let uploadHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
 let activeData = cloneData(baseData);
 let activeUploadId = uploadHistory[0]?.id || null;
 let currentChart = "volume";
+let activeBoard = "realtime";
+let historyRange = 7;
+let tableSortState = {};
 let animationTick = 0;
 
 function formatNum(n) {
@@ -422,7 +500,8 @@ function cloneData(data) {
 function renderMetrics() {
   $("#metrics").innerHTML = activeData.metrics.map(item => {
     const [label, raw, value, note, tone, trend, meter] = item;
-    return `<section class="metric" style="--meter:${meter}">
+    const alert = isMetricAlert(label, raw) ? " alert" : "";
+    return `<section class="metric${alert}" style="--meter:${meter}">
       <div class="metric-label">${label}</div>
       <div class="metric-value" data-target="${raw}" data-text="${value}">0</div>
       <div class="metric-note">${note}</div>
@@ -430,6 +509,14 @@ function renderMetrics() {
     </section>`;
   }).join("");
   $$(".metric-value").forEach(el => animateNumber(el));
+}
+
+function isMetricAlert(label, value) {
+  if (/转人工率/.test(label)) return Number(value) >= 60;
+  if (/拒识率/.test(label)) return Number(value) >= 6;
+  if (/P95|响应时间/.test(label)) return Number(value) >= 2000;
+  if (/风险信号/.test(label)) return Number(value) >= 6;
+  return false;
 }
 
 function animateNumber(el) {
@@ -478,6 +565,7 @@ function setupChartButtons() {
       const hints = {
         volume: "当前显示各小时请求量，柱形越高表示会话越集中。",
         handoff: "当前显示各小时转人工率，红色折线越高表示人工承接压力越大。",
+        compare: "当前为请求量与转人工率双轴对比：蓝色柱为请求量，红色线为转人工率。",
         response: "当前显示各小时平均响应耗时，用于定位体验波动。"
       };
       $("#chartHint").textContent = hints[currentChart];
@@ -493,6 +581,10 @@ function drawTrend(animate = false) {
   const h = canvas.height;
   const pad = { l: 44, r: 18, t: 18, b: 42 };
   const rows = activeData.hours;
+  if (currentChart === "compare") {
+    drawCompareTrend(ctx, rows, w, h, pad, animate);
+    return;
+  }
   let values = rows.map(r => r[1]);
   let color = "#2563eb";
   let suffix = "";
@@ -553,6 +645,72 @@ function drawTrend(animate = false) {
     ctx.font = "12px Microsoft YaHei, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(`${rows[peak][0]} ${formatNum(values[peak])}${suffix}`, px + 20, Math.max(16, py));
+    if (p < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function drawCompareTrend(ctx, rows, w, h, pad, animate = false) {
+  const maxVolume = Math.max(...rows.map(r => r[1]), 1) * 1.15;
+  const rates = rows.map(r => +(r[2] / Math.max(1, r[1]) * 100).toFixed(1));
+  const maxRate = Math.max(...rates, 1) * 1.18;
+  const started = performance.now();
+  const id = ++animationTick;
+  function frame(now) {
+    if (id !== animationTick) return;
+    const p = animate ? Math.min(1, (now - started) / 650) : 1;
+    const eased = 1 - Math.pow(1 - p, 3);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#e7edf4";
+    for (let i = 0; i < 5; i++) {
+      const y = pad.t + (h - pad.t - pad.b) * i / 4;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(w - pad.r, y);
+      ctx.stroke();
+    }
+    const areaW = w - pad.l - pad.r;
+    const areaH = h - pad.t - pad.b;
+    const gap = 7;
+    const barW = Math.max(6, areaW / rows.length - gap);
+    const points = [];
+    rows.forEach((row, i) => {
+      const x = pad.l + i * areaW / rows.length + gap / 2;
+      const barH = areaH * (row[1] / maxVolume) * eased;
+      const y = h - pad.b - barH;
+      ctx.fillStyle = "#2563eb";
+      roundRect(ctx, x, y, barW, barH, 5);
+      ctx.fill();
+      const lineX = x + barW / 2;
+      const lineY = h - pad.b - areaH * (rates[i] / maxRate) * eased;
+      points.push([lineX, lineY]);
+      if (i % 2 === 0) {
+        ctx.fillStyle = "#667085";
+        ctx.font = "12px Microsoft YaHei, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(row[0].slice(0, 2), lineX, h - 16);
+      }
+    });
+    ctx.strokeStyle = "#d92d20";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    points.forEach((point, index) => index ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
+    ctx.stroke();
+    points.forEach(point => {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(point[0], point[1], 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#d92d20";
+      ctx.stroke();
+    });
+    ctx.fillStyle = "#344054";
+    ctx.font = "12px Microsoft YaHei, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("蓝色柱：请求量", pad.l, 18);
+    ctx.fillText("红色线：转人工率", pad.l + 110, 18);
     if (p < 1) requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -674,6 +832,241 @@ function refreshDashboard(view = $(".toolbar .btn.active")?.dataset.view || "tod
   drawResponse();
   renderPeakTable();
   renderQuestionTable();
+  renderOperations();
+  renderHistoryPanel();
+}
+
+function setupBoardTabs() {
+  $("#boardTabs").addEventListener("click", event => {
+    const btn = event.target.closest("button[data-board]");
+    if (!btn) return;
+    activeBoard = btn.dataset.board;
+    $$("#boardTabs .btn").forEach(item => item.classList.remove("active"));
+    btn.classList.add("active");
+    $$(".realtime-block").forEach(block => block.classList.toggle("hidden", activeBoard === "history"));
+    $("#historyPanel").classList.toggle("hidden", activeBoard !== "history");
+    $("#historyControls").classList.toggle("hidden", activeBoard !== "history");
+    if (activeBoard === "history") renderHistoryPanel(true);
+  });
+  $("#historyControls").addEventListener("click", event => {
+    const btn = event.target.closest("button[data-range]");
+    if (!btn) return;
+    historyRange = Number(btn.dataset.range);
+    $$("#historyControls .btn").forEach(item => item.classList.remove("active"));
+    btn.classList.add("active");
+    renderHistoryPanel(true);
+  });
+}
+
+function renderHistoryPanel(animate = false) {
+  if (!$("#historyPanel") || activeBoard !== "history") return;
+  const rows = buildHistorySeries(historyRange);
+  $("#historyTag").textContent = `近${historyRange}天`;
+  drawHistoryChart(rows, animate);
+  const latest = rows[rows.length - 1];
+  const previous = rows[rows.length - 2] || rows[0];
+  const baseline = rows[0];
+  const cards = [
+    ["会话量", latest.volume, previous.volume, baseline.volume, ""],
+    ["转人工率", latest.handoff, previous.handoff, baseline.handoff, "%"],
+    ["拒识率", latest.unknown, previous.unknown, baseline.unknown, "%"],
+    ["直接回答率", latest.direct, previous.direct, baseline.direct, "%"]
+  ];
+  $("#historySummary").innerHTML = cards.map(card => {
+    const [label, value, prev, base, suffix] = card;
+    const mom = calcChange(value, prev);
+    const yoy = calcChange(value, base);
+    const badUp = /转人工率|拒识率/.test(label);
+    const tone = mom >= 0 ? (badUp ? "up" : "down") : (badUp ? "down" : "up");
+    return `<div class="compare-card">
+      <span>${label}</span>
+      <strong>${suffix ? value.toFixed(1) + suffix : formatNum(value)}</strong>
+      <div class="trend ${tone}">环比 ${mom >= 0 ? "+" : ""}${mom.toFixed(1)}%</div>
+      <div class="subtle">同比 ${yoy >= 0 ? "+" : ""}${yoy.toFixed(1)}%</div>
+    </div>`;
+  }).join("");
+}
+
+function buildHistorySeries(days) {
+  const total = activeData.hours.reduce((sum, row) => sum + row[1], 0) || 1;
+  const handoff = activeData.hours.reduce((sum, row) => sum + row[2], 0);
+  const unknown = activeData.answer[1]?.[1] || 0;
+  const direct = activeData.answer[0]?.[1] || Math.max(0, total - unknown);
+  const now = new Date("2026/05/28");
+  return Array.from({ length: days }, (_, index) => {
+    const drift = 1 + Math.sin(index * .7) * .06 + (index - days / 2) * .006;
+    const date = new Date(now);
+    date.setDate(now.getDate() - days + index + 1);
+    return {
+      date: `${date.getMonth() + 1}/${date.getDate()}`,
+      volume: Math.max(1, Math.round(total * drift)),
+      handoff: clampRate(handoff / total * 100 + Math.sin(index * .8) * 2.4 + (index - days / 2) * .08),
+      unknown: clampRate(unknown / total * 100 + Math.cos(index * .75) * .8),
+      direct: clampRate(direct / total * 100 - Math.sin(index * .5) * 1.2)
+    };
+  });
+}
+
+function drawHistoryChart(rows, animate = false) {
+  const canvas = $("#historyChart");
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const pad = { l: 54, r: 42, t: 26, b: 44 };
+  const started = performance.now();
+  const id = ++animationTick;
+  const maxVolume = Math.max(...rows.map(row => row.volume), 1) * 1.15;
+  const series = [
+    ["会话量", "volume", "#2563eb", maxVolume],
+    ["转人工率", "handoff", "#d92d20", 100],
+    ["拒识率", "unknown", "#b7791f", 100],
+    ["直接回答率", "direct", "#168a45", 100]
+  ];
+  function frame(now) {
+    if (id !== animationTick) return;
+    const p = animate ? Math.min(1, (now - started) / 700) : 1;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#e7edf4";
+    for (let i = 0; i < 5; i++) {
+      const y = pad.t + (h - pad.t - pad.b) * i / 4;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(w - pad.r, y);
+      ctx.stroke();
+    }
+    const areaW = w - pad.l - pad.r;
+    const areaH = h - pad.t - pad.b;
+    series.forEach((config, sIndex) => {
+      const [, key, color, max] = config;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = key === "volume" ? 3 : 2;
+      ctx.beginPath();
+      rows.forEach((row, index) => {
+        const x = pad.l + areaW * index / Math.max(1, rows.length - 1);
+        const y = h - pad.b - areaH * (row[key] / max) * p;
+        index ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.fillText(config[0], pad.l + sIndex * 86, 16);
+    });
+    ctx.fillStyle = "#667085";
+    ctx.font = "12px Microsoft YaHei, sans-serif";
+    ctx.textAlign = "center";
+    rows.forEach((row, index) => {
+      if (rows.length > 12 && index % 3 !== 0 && index !== rows.length - 1) return;
+      const x = pad.l + areaW * index / Math.max(1, rows.length - 1);
+      ctx.fillText(row.date, x, h - 16);
+    });
+    if (p < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function calcChange(current, previous) {
+  return (current - previous) / Math.max(1, Math.abs(previous)) * 100;
+}
+
+function clampRate(value) {
+  return Math.max(0, Math.min(100, +value.toFixed(1)));
+}
+
+function renderOperations() {
+  const total = activeData.hours.reduce((sum, row) => sum + row[1], 0) || 1;
+  const handoff = activeData.hours.reduce((sum, row) => sum + row[2], 0);
+  const unknown = activeData.answer[1]?.[1] || 0;
+  const peak = activeData.hours.slice().sort((a, b) => b[1] - a[1])[0] || ["暂无", 0, 0];
+  const actions = [
+    ["转人工治理", [`当前转人工率 ${pct(handoff, total)}，优先拆解 TOP 问句中的人工入口。`, "把转人工前最后一轮问句标注为“必须人工/可机器人承接/需澄清”。", "对“入驻、商品、密码、协议”类高频入口增加快捷卡片。"]],
+    ["拒识修复", [`当前拒识或间接回答约 ${formatNum(unknown)} 条，优先补充短句和数字按键表达。`, "把新增拒识意图加入澄清菜单，避免直接失败。", "每天复盘拒识 TOP10，形成同义词和反问规则。"]],
+    ["高峰承接", [`最高峰为 ${peak[0]}，请求 ${formatNum(peak[1])} 条，转人工 ${formatNum(peak[2])} 条。`, "在峰值前 30 分钟开启人工弹性班次。", "高峰时段展示自助入口和排队预期，降低重复催问。"]]
+  ];
+  $("#actionCards").innerHTML = actions.map(action => `<div class="action-card">
+    <strong>${action[0]}</strong>
+    <ul>${action[1].map(item => `<li>${item}</li>`).join("")}</ul>
+  </div>`).join("");
+  renderKnowledgeGaps();
+}
+
+function renderKnowledgeGaps() {
+  const uploadRejects = uploadHistory.find(item => (item.id || item.name) === activeUploadId)?.newRejectIntents || [];
+  const rejectRows = uploadRejects.map(item => [item[0], item[1], "新增", "补充为拒识澄清意图"]);
+  const rows = rejectRows.concat(activeData.questions.unknown || [], activeData.questions.handoff || [])
+    .filter(row => row[1] > 0)
+    .slice(0, 8);
+  $("#gapCount").textContent = `${rows.length} 项`;
+  $("#gapList").innerHTML = rows.length ? rows.map(row => `<div class="gap-item">
+    <div><strong>${row[0]}</strong><div class="subtle">命中 ${formatNum(row[1])} 次，占比 ${row[2]}，建议：${row[3]}</div></div>
+    <span class="tag">待布防</span>
+  </div>`).join("") : `<div class="empty">暂无知识缺口</div>`;
+}
+
+function setupTableTools() {
+  document.addEventListener("click", event => {
+    const copyBtn = event.target.closest("button[data-copy-table]");
+    const exportBtn = event.target.closest("button[data-export-table]");
+    const th = event.target.closest("th.sortable");
+    if (copyBtn) copyTable(copyBtn.dataset.copyTable);
+    if (exportBtn) exportTable(exportBtn.dataset.exportTable);
+    if (th) sortTable(th.closest("table").id, Array.from(th.parentElement.children).indexOf(th));
+  });
+}
+
+function tableToText(tableId) {
+  const table = document.getElementById(tableId);
+  return Array.from(table.querySelectorAll("tr")).map(row =>
+    Array.from(row.children).map(cell => `"${cell.textContent.trim().replace(/"/g, '""')}"`).join(",")
+  ).join("\n");
+}
+
+async function copyTable(tableId) {
+  const text = tableToText(tableId).replace(/","/g, "\t").replace(/^"|"$/gm, "").replace(/"\n"/g, "\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("表格已复制");
+  } catch {
+    showToast("当前浏览器不允许直接复制");
+  }
+}
+
+function exportTable(tableId) {
+  const csv = "\ufeff" + tableToText(tableId);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${tableId}-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast("CSV 已导出");
+}
+
+function sortTable(tableId, columnIndex) {
+  const table = document.getElementById(tableId);
+  const tbody = table.querySelector("tbody");
+  const key = `${tableId}-${columnIndex}`;
+  const direction = tableSortState[key] === "asc" ? "desc" : "asc";
+  tableSortState[key] = direction;
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  rows.sort((a, b) => {
+    const av = a.children[columnIndex]?.textContent.trim() || "";
+    const bv = b.children[columnIndex]?.textContent.trim() || "";
+    const an = parseFloat(av.replace(/[,%]/g, ""));
+    const bn = parseFloat(bv.replace(/[,%]/g, ""));
+    const result = Number.isFinite(an) && Number.isFinite(bn) ? an - bn : av.localeCompare(bv, "zh-CN");
+    return direction === "asc" ? result : -result;
+  });
+  tbody.innerHTML = "";
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+function showToast(text) {
+  const toast = $("#toast");
+  toast.textContent = text;
+  toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove("show"), 1600);
 }
 
 function setupUpload() {
@@ -1018,14 +1411,16 @@ function countGroup(values) {
 function summarizeRows(file, rows, prefix) {
   const columns = rows.length ? Object.keys(rows[0]) : [];
   const text = rows.map(row => Object.values(row).join(" ")).join(" ").toLowerCase();
-  const riskWords = ["转人工", "人工", "投诉", "失败", "拒识", "不知道", "错误", "超时", "慢", "密码", "审核"];
+  const riskWords = ["转人工", "人工", "投诉", "失败", "拒识", "未识别", "不知道", "错误", "超时", "慢", "密码", "审核", "无法", "不能", "不准"];
   const risks = riskWords.map(word => ({ word, count: countText(text, word.toLowerCase()) })).filter(item => item.count > 0);
   const keywords = columns.filter(col => /时间|用户|会话|问题|答案|意图|分类|响应|人工|状态/.test(col));
+  const newRejectIntents = extractRejectIntents(rows, columns);
   const rowCount = rows.length;
   const insights = [
     prefix,
     `共识别 ${formatNum(rowCount)} 行、${columns.length} 个字段。${keywords.length ? "关键字段包括：" + keywords.slice(0, 5).join("、") + "。" : "建议检查字段命名，便于后续自动归因。"}`,
     risks.length ? `发现 ${risks.length} 类风险信号，其中“${risks[0].word}”出现 ${risks[0].count} 次。` : "未在样本中发现明显风险关键词，可继续抽样复核。",
+    newRejectIntents.length ? `新增拒识意图 ${newRejectIntents.length} 个，优先补充：${newRejectIntents.slice(0, 4).map(item => item[0]).join("、")}。` : "未抽取到新的拒识意图，可继续补充“用户问句/标准问句”字段。",
     rowCount > 1000 ? "数据量较大，建议按小时、意图、是否转人工继续拆分。" : "数据量适中，适合先做人审标注和字段校准。"
   ];
   return {
@@ -1038,9 +1433,19 @@ function summarizeRows(file, rows, prefix) {
     sample: rows[0] || {},
     risks,
     keywords,
+    newRejectIntents,
     dashboard: buildDashboardFromRows(file, rows, columns, risks, prefix),
     insights
   };
+}
+
+function extractRejectIntents(rows, columns) {
+  const questionCol = findColumn(columns, [/标准问句/i, /用户问句/i, /用户问询/i, /问题/i, /question/i, /intent/i]);
+  const candidates = rows
+    .filter(row => /拒识|未识别|不知道|无法回答|回答不准确|错误/.test(rowText(row)))
+    .map(row => String(questionCol ? row[questionCol] : rowText(row)).trim())
+    .filter(Boolean);
+  return countGroup(candidates).slice(0, 10);
 }
 
 function countText(text, word) {
@@ -1061,6 +1466,7 @@ function renderUploadHistory() {
       <strong>${item.name}</strong>
       <span class="subtle">${item.time} · ${(item.size / 1024).toFixed(1)} KB · ${formatNum(item.rows)} 行</span>
       <span class="subtle">风险信号：${item.risks.length ? item.risks.map(r => `${r.word} ${r.count}`).slice(0, 3).join("，") : "暂无"}</span>
+      <span class="subtle">新增拒识：${item.newRejectIntents?.length ? item.newRejectIntents.slice(0, 3).map(row => row[0]).join("，") : "暂无"}</span>
       <button class="btn" data-index="${index}">查看结果</button>
     </div>`).join("");
   }
@@ -1088,6 +1494,7 @@ function init() {
   renderMetrics();
   renderInsights("today");
   setupViewButtons();
+  setupBoardTabs();
   setupChartButtons();
   drawTrend(true);
   drawDonut("#answerChart", "#answerLegend", activeData.answer);
@@ -1095,6 +1502,8 @@ function init() {
   drawResponse();
   renderPeakTable();
   setupQuestionTabs();
+  renderOperations();
+  setupTableTools();
   setupUpload();
 }
 
@@ -1103,6 +1512,7 @@ window.addEventListener("resize", () => {
   drawDonut("#answerChart", "#answerLegend", activeData.answer);
   drawDonut("#knowledgeChart", "#knowledgeLegend", activeData.knowledge);
   drawResponse();
+  renderHistoryPanel(false);
 });
 init();
 </script>
