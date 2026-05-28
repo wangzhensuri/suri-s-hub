@@ -154,6 +154,10 @@ tbody tr:hover { background: #f7fbff; }
   display: grid;
   gap: 4px;
 }
+.history-item.active {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
 .history-item button { justify-self: start; margin-top: 4px; }
 .tag {
   display: inline-flex;
@@ -402,6 +406,8 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const historyKey = "customer-session-upload-history-v2";
 let uploadHistory = JSON.parse(localStorage.getItem(historyKey) || "[]");
+let activeData = cloneData(baseData);
+let activeUploadId = uploadHistory[0]?.id || null;
 let currentChart = "volume";
 let animationTick = 0;
 
@@ -409,8 +415,12 @@ function formatNum(n) {
   return Number(n || 0).toLocaleString("zh-CN");
 }
 
+function cloneData(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
 function renderMetrics() {
-  $("#metrics").innerHTML = baseData.metrics.map(item => {
+  $("#metrics").innerHTML = activeData.metrics.map(item => {
     const [label, raw, value, note, tone, trend, meter] = item;
     return `<section class="metric" style="--meter:${meter}">
       <div class="metric-label">${label}</div>
@@ -442,7 +452,7 @@ function animateNumber(el) {
 }
 
 function renderInsights(view) {
-  const data = baseData.views[view];
+  const data = activeData.views[view] || baseData.views[view];
   $("#insightTitle").textContent = data.title;
   $("#insightTag").textContent = data.tag;
   $("#insights").innerHTML = data.items.map(item => `<li>${item}</li>`).join("");
@@ -482,7 +492,7 @@ function drawTrend(animate = false) {
   const w = canvas.width;
   const h = canvas.height;
   const pad = { l: 44, r: 18, t: 18, b: 42 };
-  const rows = baseData.hours;
+  const rows = activeData.hours;
   let values = rows.map(r => r[1]);
   let color = "#2563eb";
   let suffix = "";
@@ -562,7 +572,7 @@ function roundRect(ctx, x, y, w, h, r) {
 function drawDonut(canvasId, legendId, rows) {
   const canvas = $(canvasId);
   const ctx = canvas.getContext("2d");
-  const total = rows.reduce((sum, row) => sum + row[1], 0);
+  const total = rows.reduce((sum, row) => sum + row[1], 0) || 1;
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
   let start = -Math.PI / 2;
@@ -594,7 +604,8 @@ function drawDonut(canvasId, legendId, rows) {
 function drawResponse() {
   const canvas = $("#responseChart");
   const ctx = canvas.getContext("2d");
-  const rows = baseData.response;
+  const rows = activeData.response;
+  const total = rows.reduce((sum, row) => sum + row[1], 0) || 1;
   const max = Math.max(...rows.map(r => r[1]));
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   rows.forEach((row, i) => {
@@ -610,13 +621,13 @@ function drawResponse() {
     ctx.font = "13px Microsoft YaHei, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(row[0], 8, y + 14);
-    ctx.fillText(`${formatNum(row[1])} / ${(row[1] / 20073 * 100).toFixed(1)}%`, 105, y + 38);
+    ctx.fillText(`${formatNum(row[1])} / ${(row[1] / total * 100).toFixed(1)}%`, 105, y + 38);
   });
 }
 
 function renderPeakTable() {
-  const rows = baseData.hours
-    .filter(r => r[1] > 800)
+  const rows = activeData.hours
+    .filter(r => r[1] > 0)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
   $("#peakTable tbody").innerHTML = rows.map(row => {
@@ -626,20 +637,43 @@ function renderPeakTable() {
   }).join("");
 }
 
+function renderQuestionTable(topic = $("#questionTabs .btn.active")?.dataset.topic || "handoff") {
+  const rows = activeData.questions[topic] || activeData.questions.handoff || [];
+  $("#questionTable tbody").innerHTML = rows.map(row =>
+    `<tr><td>${row[0]}</td><td>${formatNum(row[1])}</td><td>${row[2]}</td><td>${row[3]}</td></tr>`
+  ).join("");
+}
+
 function setupQuestionTabs() {
-  const render = topic => {
-    $("#questionTable tbody").innerHTML = baseData.questions[topic].map(row =>
-      `<tr><td>${row[0]}</td><td>${formatNum(row[1])}</td><td>${row[2]}</td><td>${row[3]}</td></tr>`
-    ).join("");
-  };
   $("#questionTabs").addEventListener("click", event => {
     const btn = event.target.closest("button[data-topic]");
     if (!btn) return;
     $$("#questionTabs .btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    render(btn.dataset.topic);
+    renderQuestionTable(btn.dataset.topic);
   });
-  render("handoff");
+  renderQuestionTable("handoff");
+}
+
+function applyUploadResult(result, emphasize) {
+  if (!result) return;
+  activeUploadId = result.id || result.name;
+  activeData = result.dashboard || buildFallbackDashboard(result.name, result.rows, result.risks || [], result.insights || []);
+  $("#reportRange").textContent = `上传分析：${result.name}，识别 ${formatNum(result.rows)} 行，${result.columns?.length || 0} 个字段`;
+  refreshDashboard($(".toolbar .btn.active")?.dataset.view || "today");
+  renderUploadHistory();
+  if (emphasize) $("#viewPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function refreshDashboard(view = $(".toolbar .btn.active")?.dataset.view || "today") {
+  renderMetrics();
+  renderInsights(view);
+  drawTrend(true);
+  drawDonut("#answerChart", "#answerLegend", activeData.answer);
+  drawDonut("#knowledgeChart", "#knowledgeLegend", activeData.knowledge);
+  drawResponse();
+  renderPeakTable();
+  renderQuestionTable();
 }
 
 function setupUpload() {
@@ -661,16 +695,35 @@ function setupUpload() {
   });
   $("#clearHistory").addEventListener("click", () => {
     uploadHistory = [];
+    activeUploadId = null;
+    activeData = cloneData(baseData);
+    $("#reportRange").textContent = "日报视图：2026-05-14，覆盖 20,073 条问答与 4,962 个会话";
     localStorage.removeItem(historyKey);
     renderUploadHistory();
     renderUploadResult(null);
+    refreshDashboard("today");
+  });
+  $("#showLatest").addEventListener("click", () => {
+    const latest = uploadHistory[0];
+    if (!latest) return;
+    renderUploadResult(latest);
+    applyUploadResult(latest, true);
   });
   $("#historyList").addEventListener("click", event => {
     const btn = event.target.closest("button[data-index]");
-    if (btn) renderUploadResult(uploadHistory[Number(btn.dataset.index)]);
+    if (btn) {
+      const result = uploadHistory[Number(btn.dataset.index)];
+      renderUploadResult(result);
+      applyUploadResult(result, true);
+    }
   });
   renderUploadHistory();
-  renderUploadResult(uploadHistory[0] || null);
+  if (uploadHistory[0]) {
+    renderUploadResult(uploadHistory[0]);
+    applyUploadResult(uploadHistory[0], false);
+  } else {
+    renderUploadResult(null);
+  }
 }
 
 async function analyzeFile(file) {
@@ -684,14 +737,17 @@ async function analyzeFile(file) {
     result = buildFallbackResult(file, "文件内容解析失败，已保留文件级信息。");
   }
   uploadHistory.unshift(result);
+  activeUploadId = result.id;
   uploadHistory = uploadHistory.slice(0, 20);
   localStorage.setItem(historyKey, JSON.stringify(uploadHistory));
   renderUploadHistory();
   renderUploadResult(result);
+  applyUploadResult(result, true);
 }
 
 function buildFallbackResult(file, message) {
   return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     name: file.name,
     time: new Date().toLocaleString("zh-CN"),
     size: file.size,
@@ -700,6 +756,7 @@ function buildFallbackResult(file, message) {
     sample: {},
     risks: [],
     keywords: [],
+    dashboard: buildFallbackDashboard(file.name, 0, [], []),
     insights: [message, `文件大小 ${(file.size / 1024).toFixed(1)} KB，已写入历史记录。`]
   };
 }
@@ -753,6 +810,211 @@ function splitLine(line, delimiter) {
   return cells;
 }
 
+function buildDashboardFromRows(file, rows, columns, risks, prefix) {
+  const total = rows.length;
+  const joinedRows = rows.map(row => Object.values(row).join(" "));
+  const text = joinedRows.join(" ").toLowerCase();
+  const sessionCol = findColumn(columns, [/会话.*id/i, /session/i, /conversation/i]);
+  const userCol = findColumn(columns, [/用户.*id/i, /user/i, /客户/i]);
+  const timeCol = findColumn(columns, [/时间/i, /日期/i, /time/i, /date/i]);
+  const answerCol = findColumn(columns, [/回答方式/i, /回复方式/i, /answer.*type/i]);
+  const knowledgeCol = findColumn(columns, [/知识库类型/i, /知识.*类型/i, /业务类型/i, /分类/i, /type/i]);
+  const questionCol = findColumn(columns, [/标准问句/i, /用户问句/i, /用户问询/i, /问题/i, /question/i, /intent/i]);
+  const responseCol = findColumn(columns, [/响应.*(耗时|时间|ms)/i, /耗时/i, /response/i, /latency/i]);
+  const handoffCount = countRows(rows, row => rowText(row).includes("转人工") || rowText(row).includes("人工服务") || rowText(row).includes("人工客服"));
+  const unknownCount = countRows(rows, row => /拒识|未识别|不知道|无法回答|间接回答/.test(rowText(row)));
+  const directCount = answerCol ? countRows(rows, row => /直接/.test(String(row[answerCol]))) : Math.max(0, total - unknownCount);
+  const indirectCount = Math.max(0, total - directCount);
+  const sessions = sessionCol ? uniqueCount(rows, sessionCol) : Math.max(1, Math.round(total / 4));
+  const users = userCol ? uniqueCount(rows, userCol) : Math.max(1, Math.round(sessions * .66));
+  const responseValues = responseCol ? rows.map(row => parseNumber(row[responseCol])).filter(Number.isFinite) : [];
+  const responseBuckets = buildResponseBuckets(responseValues, total);
+  const p95 = responseValues.length ? percentile(responseValues, .95) : Math.round(2057 * Math.max(.2, total / 20073));
+  const avg = responseValues.length ? average(responseValues) : Math.round(685 * Math.max(.2, total / 20073));
+  const median = responseValues.length ? percentile(responseValues, .5) : Math.round(284 * Math.max(.2, total / 20073));
+  const hours = buildHours(rows, timeCol, responseCol, total);
+  const knowledge = buildKnowledge(rows, knowledgeCol, total);
+  const questionRows = buildQuestionRows(rows, questionCol, total);
+  const riskTop = risks[0] ? `其中“${risks[0].word}”出现 ${risks[0].count} 次` : "暂未发现明显高频风险词";
+  return {
+    metrics: [
+      ["问答总量", total, formatNum(total), `${formatNum(sessions)} 个会话，${formatNum(users)} 个用户`, "up", "已更新", .86],
+      ["转人工率", rateNum(handoffCount, total), pct(handoffCount, total), `${formatNum(handoffCount)} 条疑似触发转人工`, handoffCount / Math.max(1, total) > .55 ? "up" : "flat", "上传", Math.min(.95, handoffCount / Math.max(1, total))],
+      ["拒识率", rateNum(unknownCount, total), pct(unknownCount, total), `${formatNum(unknownCount)} 条疑似拒识/未识别`, unknownCount / Math.max(1, total) > .08 ? "up" : "down", "上传", Math.min(.8, unknownCount / Math.max(1, total) * 3)],
+      ["P95 响应时间", p95, `${formatNum(p95)}ms`, `平均 ${formatNum(avg)}ms，中位 ${formatNum(median)}ms`, p95 > 2000 ? "up" : "flat", "上传", Math.min(.95, p95 / 3500)],
+      ["直接回答率", rateNum(directCount, total), pct(directCount, total), `${formatNum(directCount)} 条直接回答`, "flat", "上传", directCount / Math.max(1, total)],
+      ["会话深度", +(total / Math.max(1, sessions)).toFixed(1), (total / Math.max(1, sessions)).toFixed(1), "每会话平均轮次估算", "flat", "上传", .46],
+      ["风险信号", risks.length, String(risks.length), riskTop, risks.length > 6 ? "up" : "flat", "上传", Math.min(.95, risks.length / 12)],
+      ["字段数量", columns.length, String(columns.length), "已参与自动识别和归因", "flat", "上传", Math.min(.95, columns.length / 30)]
+    ],
+    hours,
+    answer: [["直接回答", directCount, "#2563eb"], ["间接回答 / 拒识", indirectCount, "#d92d20"]],
+    knowledge,
+    response: responseBuckets,
+    views: {
+      today: {
+        title: "上传文件发现",
+        tag: file.name,
+        items: [
+          prefix,
+          `识别 ${formatNum(total)} 行数据，转人工相关内容约 ${formatNum(handoffCount)} 条，占 ${pct(handoffCount, total)}。`,
+          `风险信号共 ${risks.length} 类，${riskTop}。`,
+          timeCol ? `已根据“${timeCol}”生成小时级趋势。` : "未识别到明确时间字段，小时趋势按原日报形态做比例映射。"
+        ]
+      },
+      peak: {
+        title: "上传高峰治理",
+        tag: "文件联动",
+        items: [
+          `最高流量时段为 ${hours.slice().sort((a, b) => b[1] - a[1])[0]?.[0] || "暂无"}，请优先检查该时段的转人工与响应耗时。`,
+          `疑似人工需求 ${formatNum(handoffCount)} 条，建议把转人工前最后一轮问题单独标注。`,
+          responseValues.length ? `已识别 ${formatNum(responseValues.length)} 条响应耗时，可继续按慢请求抽样。` : "未识别到响应耗时字段，建议补充毫秒级响应列。"
+        ]
+      },
+      knowledge: {
+        title: "上传知识优化",
+        tag: "自动归因",
+        items: [
+          knowledgeCol ? `已根据“${knowledgeCol}”重算知识库类型占比。` : "未识别到知识库类型字段，已用文本关键词做粗分类。",
+          questionCol ? `已根据“${questionCol}”生成 TOP 问句列表。` : "未识别到问句字段，已用整行文本抽取高频表达。",
+          "建议将高频人工、审核、密码、商品、入驻类问题补齐标准答案和澄清卡片。"
+        ]
+      }
+    },
+    questions: {
+      handoff: questionRows,
+      entry: questionRows.filter(row => /入驻|注册|审核/.test(row[0])).concat(questionRows).slice(0, 4),
+      product: questionRows.filter(row => /商品|上架|协议|保证金/.test(row[0])).concat(questionRows).slice(0, 4),
+      unknown: questionRows.filter(row => /拒识|未识别|不知道|失败|错误/.test(row[0])).concat(questionRows).slice(0, 4)
+    }
+  };
+}
+
+function buildFallbackDashboard(name, rows, risks, insights) {
+  const total = rows || 0;
+  const scaled = scaleRows(baseData.hours, Math.max(total, 1));
+  const dashboard = cloneData(baseData);
+  dashboard.metrics = [
+    ["问答总量", total, formatNum(total), "来自上传文件的文件级分析", "flat", "上传", .6],
+    ["风险信号", risks.length, String(risks.length), risks[0] ? `${risks[0].word} ${risks[0].count} 次` : "暂无明显风险", "flat", "上传", .35],
+    ["字段数量", 0, "0", "未识别到结构化字段", "flat", "上传", .2],
+    ["待补充字段", 3, "3", "建议补充时间、会话ID、用户问句", "up", "建议", .5]
+  ].concat(baseData.metrics.slice(4));
+  dashboard.hours = scaled;
+  dashboard.views.today = { title: "上传文件发现", tag: name, items: insights.length ? insights : ["已完成文件级分析，建议上传结构化客服日志以联动更多面板。"] };
+  return dashboard;
+}
+
+function findColumn(columns, patterns) {
+  return columns.find(col => patterns.some(pattern => pattern.test(String(col))));
+}
+
+function rowText(row) {
+  return Object.values(row).join(" ");
+}
+
+function countRows(rows, predicate) {
+  return rows.reduce((sum, row) => sum + (predicate(row) ? 1 : 0), 0);
+}
+
+function uniqueCount(rows, column) {
+  return new Set(rows.map(row => row[column]).filter(value => value !== "" && value != null)).size || 1;
+}
+
+function parseNumber(value) {
+  const match = String(value ?? "").replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+  return match ? Number(match[0]) : NaN;
+}
+
+function average(values) {
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length));
+}
+
+function percentile(values, p) {
+  const sorted = values.slice().sort((a, b) => a - b);
+  return Math.round(sorted[Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * p))] || 0);
+}
+
+function pct(count, total) {
+  return `${rateNum(count, total).toFixed(1)}%`;
+}
+
+function rateNum(count, total) {
+  return +(count / Math.max(1, total) * 100).toFixed(1);
+}
+
+function buildResponseBuckets(values, total) {
+  if (!values.length) {
+    const ratios = baseData.response.map(row => row[1] / 20073);
+    return baseData.response.map((row, index) => [row[0], Math.round(total * ratios[index])]);
+  }
+  return [
+    ["300ms内", values.filter(v => v <= 300).length],
+    ["300ms-1s", values.filter(v => v > 300 && v <= 1000).length],
+    ["1s-2s", values.filter(v => v > 1000 && v <= 2000).length],
+    ["2s以上", values.filter(v => v > 2000).length]
+  ];
+}
+
+function buildHours(rows, timeCol, responseCol, total) {
+  if (!timeCol) return scaleRows(baseData.hours, Math.max(total, 1));
+  const buckets = Array.from({ length: 24 }, (_, hour) => [`${String(hour).padStart(2, "0")}:00`, 0, 0, 0, 0]);
+  rows.forEach(row => {
+    const date = new Date(String(row[timeCol]).replace(/-/g, "/"));
+    if (Number.isNaN(date.getTime())) return;
+    const bucket = buckets[date.getHours()];
+    bucket[1] += 1;
+    if (rowText(row).includes("转人工") || rowText(row).includes("人工")) bucket[2] += 1;
+    const response = responseCol ? parseNumber(row[responseCol]) : NaN;
+    if (Number.isFinite(response)) {
+      bucket[3] += response;
+      bucket[4] += 1;
+    }
+  });
+  const rowsWithData = buckets.map(row => [row[0], row[1], row[2], row[4] ? Math.round(row[3] / row[4]) : 0]).filter(row => row[1] > 0);
+  return rowsWithData.length ? rowsWithData : scaleRows(baseData.hours, Math.max(total, 1));
+}
+
+function scaleRows(rows, total) {
+  const baseTotal = rows.reduce((sum, row) => sum + row[1], 0) || 1;
+  return rows.map(row => {
+    const count = Math.max(0, Math.round(total * row[1] / baseTotal));
+    return [row[0], count, Math.round(count * row[2] / Math.max(1, row[1])), row[3]];
+  }).filter(row => row[1] > 0);
+}
+
+function buildKnowledge(rows, knowledgeCol, total) {
+  const colors = ["#2563eb", "#0891b2", "#7c3aed", "#b7791f", "#168a45"];
+  let groups;
+  if (knowledgeCol) {
+    groups = countGroup(rows.map(row => row[knowledgeCol] || "未分类"));
+  } else {
+    groups = [
+      ["任务型", countRows(rows, row => /转人工|入驻|商品|审核|密码|协议|迁移/.test(rowText(row)))],
+      ["FAQ", countRows(rows, row => /如何|怎么|什么|是否|可以/.test(rowText(row)))],
+      ["寒暄", countRows(rows, row => /你好|谢谢|好的|再见|嗯/.test(rowText(row)))]
+    ];
+  }
+  const normalized = groups.filter(row => row[1] > 0).slice(0, 5);
+  return (normalized.length ? normalized : [["未分类", total]]).map((row, index) => [String(row[0]).slice(0, 16), row[1], colors[index % colors.length]]);
+}
+
+function buildQuestionRows(rows, questionCol, total) {
+  const values = questionCol ? rows.map(row => row[questionCol] || "空问句") : rows.map(row => rowText(row).slice(0, 40) || "空内容");
+  const grouped = countGroup(values).slice(0, 8);
+  const source = grouped.length ? grouped : [["暂无问句", 0]];
+  return source.map(row => [String(row[0]).slice(0, 42), row[1], pct(row[1], total), /人工/.test(row[0]) ? "拆解转人工原因" : "补充标准答案或澄清入口"]);
+}
+
+function countGroup(values) {
+  const map = new Map();
+  values.forEach(value => {
+    const key = String(value || "未分类").trim() || "未分类";
+    map.set(key, (map.get(key) || 0) + 1);
+  });
+  return Array.from(map, ([key, count]) => [key, count]).sort((a, b) => b[1] - a[1]);
+}
+
 function summarizeRows(file, rows, prefix) {
   const columns = rows.length ? Object.keys(rows[0]) : [];
   const text = rows.map(row => Object.values(row).join(" ")).join(" ").toLowerCase();
@@ -767,6 +1029,7 @@ function summarizeRows(file, rows, prefix) {
     rowCount > 1000 ? "数据量较大，建议按小时、意图、是否转人工继续拆分。" : "数据量适中，适合先做人审标注和字段校准。"
   ];
   return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     name: file.name,
     time: new Date().toLocaleString("zh-CN"),
     size: file.size,
@@ -775,6 +1038,7 @@ function summarizeRows(file, rows, prefix) {
     sample: rows[0] || {},
     risks,
     keywords,
+    dashboard: buildDashboardFromRows(file, rows, columns, risks, prefix),
     insights
   };
 }
@@ -793,7 +1057,7 @@ function renderUploadHistory() {
   if (!uploadHistory.length) {
     $("#historyList").innerHTML = `<div class="empty">暂无历史上传</div>`;
   } else {
-    $("#historyList").innerHTML = uploadHistory.map((item, index) => `<div class="history-item">
+    $("#historyList").innerHTML = uploadHistory.map((item, index) => `<div class="history-item ${(item.id || item.name) === activeUploadId ? "active" : ""}">
       <strong>${item.name}</strong>
       <span class="subtle">${item.time} · ${(item.size / 1024).toFixed(1)} KB · ${formatNum(item.rows)} 行</span>
       <span class="subtle">风险信号：${item.risks.length ? item.risks.map(r => `${r.word} ${r.count}`).slice(0, 3).join("，") : "暂无"}</span>
@@ -826,8 +1090,8 @@ function init() {
   setupViewButtons();
   setupChartButtons();
   drawTrend(true);
-  drawDonut("#answerChart", "#answerLegend", baseData.answer);
-  drawDonut("#knowledgeChart", "#knowledgeLegend", baseData.knowledge);
+  drawDonut("#answerChart", "#answerLegend", activeData.answer);
+  drawDonut("#knowledgeChart", "#knowledgeLegend", activeData.knowledge);
   drawResponse();
   renderPeakTable();
   setupQuestionTabs();
@@ -836,8 +1100,8 @@ function init() {
 
 window.addEventListener("resize", () => {
   drawTrend(false);
-  drawDonut("#answerChart", "#answerLegend", baseData.answer);
-  drawDonut("#knowledgeChart", "#knowledgeLegend", baseData.knowledge);
+  drawDonut("#answerChart", "#answerLegend", activeData.answer);
+  drawDonut("#knowledgeChart", "#knowledgeLegend", activeData.knowledge);
   drawResponse();
 });
 init();
